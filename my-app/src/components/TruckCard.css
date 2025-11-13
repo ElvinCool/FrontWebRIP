@@ -1,0 +1,80 @@
+.truck-card {
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.truck-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.truck-card-image-container {
+  width: 100%;
+  height: 200px;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.truck-card-image-container:focus {
+  outline: 2px solid #4a90e2;
+  outline-offset: 2px;
+}
+
+.truck-card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.2s ease;
+}
+
+.truck-card-image-container:hover .truck-card-image,
+.truck-card-image-container:focus .truck-card-image {
+  transform: scale(1.05);
+}
+
+.truck-card-content {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.truck-card-model {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #000000;
+  margin-bottom: 0.75rem;
+  text-align: center;
+}
+
+.truck-card-description {
+  font-size: 0.9rem;
+  color: #000000;
+  line-height: 1.5;
+  margin-bottom: 1.5rem;
+  flex-grow: 1;
+  text-align: center;
+}
+
+.truck-card-button {
+  background-color: #4a90e2;
+  border: none;
+  border-radius: 8px;
+  padding: 0.75rem 1.5rem;
+  color: #ffffff;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  width: 100%;
+}
+
+.truck-card-button:hover {
+  background-color: #357abd;
+}
+

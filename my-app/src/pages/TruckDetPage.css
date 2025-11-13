@@ -1,0 +1,168 @@
+.truck-det-page {
+  min-height: 100vh;
+  background-color: #eef3fa;
+}
+
+.truck-det-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  padding: 1.2rem 1rem 0 1rem;
+}
+
+.truck-det-content {
+  max-width: 840px;
+  margin: 0 auto;
+  padding: 2.25rem 1rem 2.75rem;
+}
+
+.truck-det-breadcrumbs {
+  margin-bottom: 2rem;
+}
+
+.truck-det-hero {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.truck-det-hero-image {
+  background-color: #ffffff;
+  border-radius: 20px;
+  padding: 1rem;
+  box-shadow: 0 22px 45px rgba(17, 24, 39, 0.12);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.truck-det-hero-image img {
+  width: 100%;
+  max-height: 240px;
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+  border-radius: 14px;
+}
+
+.truck-det-description {
+  background-color: #ffffff;
+  border: 4px solid #2d74f6;
+  border-radius: 14px;
+  padding: 1.4rem;
+  box-shadow: 0 20px 45px rgba(63, 123, 255, 0.18);
+}
+
+.truck-det-title {
+  margin: 0 0 0.6rem;
+  font-size: 1.9rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.truck-det-subtitle {
+  margin: 0 0 1rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1e3a8a;
+}
+
+.truck-det-text {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: #1f2937;
+}
+
+.truck-det-section {
+  margin-top: 2rem;
+}
+
+.truck-det-section-title {
+  margin: 0 0 1.1rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.truck-det-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.9rem;
+}
+
+.truck-det-stat-card {
+  background-color: #ffffff;
+  border-radius: 14px;
+  padding: 1rem 1.1rem;
+  box-shadow: 0 14px 28px rgba(17, 24, 39, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.truck-det-stat-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #f1f4ff 0%, #dce8ff 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+}
+
+.truck-det-stat-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.truck-det-stat-label {
+  font-size: 0.78rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #6b7280;
+}
+
+.truck-det-stat-value {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.truck-det-empty {
+  background-color: #ffffff;
+  border-radius: 18px;
+  padding: 2.5rem;
+  text-align: center;
+  color: #374151;
+  box-shadow: 0 18px 40px rgba(17, 24, 39, 0.08);
+}
+
+.truck-det-action {
+  margin-top: 1.5rem;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  border: none;
+}
+
+.truck-det-action:disabled {
+  opacity: 0.7;
+}
+
+@media (max-width: 768px) {
+  .truck-det-content {
+    padding: 1.75rem 0.85rem 2.25rem;
+  }
+
+  .truck-det-title {
+    font-size: 1.7rem;
+  }
+
+  .truck-det-description {
+    padding: 1.25rem;
+  }
+
+  .truck-det-stat-card {
+    padding: 0.9rem 1rem;
+  }
+}

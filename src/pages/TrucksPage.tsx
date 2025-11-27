@@ -13,9 +13,9 @@ import type { LogisticData } from "../modules/logisticTypes"
 
 const TrucksPage = () => {
   const [searchParams, setSearchParams] = useSearchParams()
-  // Используем значение из URL как источник истины для поиска
-  const searchQuery = useMemo(() => searchParams.get("search") || "", [searchParams])
-  const [searchValue, setSearchValue] = useState(searchQuery)
+  // Получаем значение поиска из URL напрямую
+  const searchQueryFromUrl = searchParams.get("search") || ""
+  const [searchValue, setSearchValue] = useState(searchQueryFromUrl)
   const [trucks, setTrucks] = useState<TruckData[]>([])
   const [cartCount, setCartCount] = useState<number>(0)
   const [logistic, setLogistic] = useState<LogisticData | null>(null)
@@ -55,9 +55,12 @@ const TrucksPage = () => {
   }, [refreshCart])
 
   // Синхронизируем значение в поле ввода с URL при изменении URL (например, при переходе через breadcrumbs)
+  // Используем строковое представление searchParams для правильного отслеживания изменений
+  const searchParamsString = searchParams.toString()
   useEffect(() => {
-    setSearchValue(searchQuery)
-  }, [searchQuery])
+    const urlSearch = searchParams.get("search") || ""
+    setSearchValue(urlSearch)
+  }, [searchParamsString, searchParams])
 
   const handleSearch = () => {
     const trimmedValue = searchValue.trim()
@@ -83,7 +86,8 @@ const TrucksPage = () => {
 
   const handleImageClick = (truckId: number) => {
     // Сохраняем параметр поиска при переходе на страницу деталей
-    const searchParam = searchQuery ? `?search=${encodeURIComponent(searchQuery)}` : ""
+    const currentSearch = searchParams.get("search")
+    const searchParam = currentSearch ? `?search=${encodeURIComponent(currentSearch)}` : ""
     navigate(`${ROUTES.ALBUMS}/${truckId}${searchParam}`)
   }
 
@@ -97,11 +101,11 @@ const TrucksPage = () => {
   }
 
   const filteredTrucks = useMemo(() => {
-    if (!searchQuery) {
+    if (!searchQueryFromUrl) {
       return trucks
     }
 
-    const normalizedQuery = searchQuery.toLowerCase()
+    const normalizedQuery = searchQueryFromUrl.toLowerCase()
 
     return trucks.filter((truck) => {
       const title = truck.title?.toLowerCase() ?? ""
@@ -113,7 +117,7 @@ const TrucksPage = () => {
         description.includes(normalizedQuery)
       )
     })
-  }, [searchQuery, trucks])
+  }, [searchQueryFromUrl, trucks])
 
   return (
     <div className="trucks-page-wrapper">

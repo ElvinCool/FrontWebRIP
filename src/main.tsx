@@ -6,11 +6,12 @@ import App from './App'
 import store from './store'
 import './index.css'
 import 'bootstrap/dist/css/bootstrap.min.css'
+import { dest_root } from './target_config'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <Provider store={store}>
-      <BrowserRouter basename="/WebRIP">
+      <BrowserRouter basename={dest_root}>
         <App />
       </BrowserRouter>
     </Provider>

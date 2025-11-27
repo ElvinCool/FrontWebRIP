@@ -1,0 +1,39 @@
+{
+  "productName": "WebRIP",
+  "version": "0.1.0",
+  "identifier": "com.webrip",
+  "build": {
+    "frontendDist": "../dist",
+    "devUrl": "http://localhost:3000",
+    "beforeDevCommand": "TAURI_DEV=true npm run dev",
+    "beforeBuildCommand": "TAURI_BUILD=true npm run build"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "WebRIP",
+        "width": 1200,
+        "height": 800,
+        "resizable": true,
+        "fullscreen": false
+      }
+    ],
+    "security": {
+      "csp": null
+    },
+    "withGlobalTauri": true
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["app"],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
+  }
+}
+

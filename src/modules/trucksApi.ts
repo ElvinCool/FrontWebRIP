@@ -3,8 +3,9 @@ import { TRUCKS_MOCK } from "./mock";
 import defaultImage from "../assets/DefaultImage.png";
 import { cartMockStore } from "./cartMockStore";
 import type { LogisticData, LogisticItemData } from "./logisticTypes";
+import { dest_api, dest_img } from "../target_config";
 
-const API_BASE = "/api";
+const API_BASE = dest_api;
 const STATIC_BASE = "/";
 
 /**
@@ -24,10 +25,10 @@ const resolveImageUrl = (raw?: string | null): string => {
     return url;
   }
 
-  // MinIO paths starting with /img/ - proxy through Vite
-  // These are handled by vite.config.ts proxy configuration
+  // MinIO paths starting with /img/ - use dest_img for Tauri or proxy for dev
   if (url.startsWith("/img/")) {
-    return url;
+    // For Tauri build, use direct URL; for dev, use proxy
+    return dest_img !== "img-proxy" ? `${dest_img}${url}` : url;
   }
 
   // Other absolute paths starting with /
@@ -149,19 +150,32 @@ const normalizeLogistic = (payload: any): LogisticData | null => {
 };
 
 const fetchJson = async (input: RequestInfo, init?: RequestInit) => {
-  const response = await fetch(input, init);
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(`${response.status} ${text}`);
+  try {
+    const response = await fetch(input, init);
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`HTTP ${response.status}: ${text}`);
+    }
+    return response.json();
+  } catch (error) {
+    // Обрабатываем сетевые ошибки (бэкенд недоступен, CORS, таймаут и т.д.)
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      throw new Error('Network error: Backend is not available');
+    }
+    throw error;
   }
-  return response.json();
 };
 
 export const getTrucksList = async (): Promise<TrucksResult> => {
   try {
-    const payload = await fetchJson(`${API_BASE}/trucks`, {
+    const url = `${API_BASE}/trucks`;
+    console.log("getTrucksList: запрос к", url);
+    
+    const payload = await fetchJson(url, {
       credentials: "include",
     });
+
+    console.log("getTrucksList: получен ответ", payload);
 
     const trucks = normalizeList(payload);
 
@@ -174,6 +188,7 @@ export const getTrucksList = async (): Promise<TrucksResult> => {
       results: trucks,
     };
   } catch (error) {
+    console.error("getTrucksList: ошибка запроса", error);
     console.warn("getTrucksList: fallback to mock data", error);
     return TRUCKS_MOCK;
   }

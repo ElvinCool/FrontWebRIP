@@ -60,6 +60,75 @@
 
 .trucks-grid {
   margin-top: 1rem;
+  margin-bottom: 2rem;
+}
+
+.trucks-empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #6b7280;
+  font-size: 1.1rem;
+}
+
+.trucks-pagination-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 3rem;
+  padding: 2rem 0;
+}
+
+.trucks-pagination {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.25rem;
+}
+
+.trucks-pagination .page-link {
+  color: #3f7bff;
+  background-color: #fff;
+  border: 1px solid #e5e7eb;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  user-select: none;
+}
+
+.trucks-pagination .page-link:hover {
+  background-color: #f3f4f6;
+  border-color: #3f7bff;
+  color: #3f7bff;
+}
+
+.trucks-pagination .page-item.active .page-link {
+  background-color: #3f7bff;
+  border-color: #3f7bff;
+  color: #fff;
+  font-weight: 600;
+}
+
+.trucks-pagination .page-item.disabled .page-link {
+  color: #9ca3af;
+  background-color: #f9fafb;
+  border-color: #e5e7eb;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.trucks-pagination .page-item.disabled .page-link:hover {
+  background-color: #f9fafb;
+  border-color: #e5e7eb;
+  color: #9ca3af;
+}
+
+.trucks-pagination-info {
+  color: #6b7280;
+  font-size: 0.9rem;
+  text-align: center;
 }
 
 @media (max-width: 992px) {

@@ -1,0 +1,30 @@
+<<<<<<< HEAD:manifest.webmanifest
+{"name":"LogiTruck","short_name":"LogiTruck","start_url":"/WebRIP/","display":"standalone","background_color":"#ffffff","theme_color":"#0d66dd","lang":"en","scope":"/WebRIP/","orientation":"portrait-primary","icons":[{"src":"/logo192.png","type":"image/png","sizes":"192x192"},{"src":"/logo512.png","type":"image/png","sizes":"512x512"}]}
+=======
+{
+  "name": "LogiTruck",
+  "short_name": "LogiTruck",
+  "start_url": "/WebRIP/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0d66dd",
+  "lang": "ru",
+  "scope": "/WebRIP/",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/WebRIP/logo192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/WebRIP/logo512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ]
+}
+
+>>>>>>> ae44d82 (Add manifest.webmanifest and update VitePWA config for GitHub Pages):public/manifest.webmanifest

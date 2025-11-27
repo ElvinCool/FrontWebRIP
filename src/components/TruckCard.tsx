@@ -8,6 +8,8 @@ interface TruckCardProps {
   description?: string | null;
   onRequestClick: () => void;
   onImageClick?: () => void;
+  isAuthenticated?: boolean;
+  showAddButton?: boolean;
 }
 
 const TruckCard = ({
@@ -16,6 +18,8 @@ const TruckCard = ({
   description,
   onRequestClick,
   onImageClick,
+  isAuthenticated = false,
+  showAddButton = true,
 }: TruckCardProps) => {
   const handleImageClick = () => {
     if (onImageClick) {
@@ -45,9 +49,15 @@ const TruckCard = ({
       <div className="truck-card-content">
         <h3 className="truck-card-model">{model}</h3>
         <p className="truck-card-description">{previewDescription}</p>
-        <Button className="truck-card-button" onClick={onRequestClick}>
-          Оставить заявку
-        </Button>
+        {showAddButton && (
+          <Button 
+            className="truck-card-button" 
+            onClick={onRequestClick}
+            disabled={!isAuthenticated}
+          >
+            {isAuthenticated ? "Добавить" : "Оставить заявку"}
+          </Button>
+        )}
       </div>
     </div>
   );

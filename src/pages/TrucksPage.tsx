@@ -2,20 +2,22 @@ import "./TrucksPage.css"
 import { useEffect, useMemo, useState } from "react"
 import { Row, Col, Pagination } from "react-bootstrap"
 import { useNavigate, useSearchParams } from "react-router-dom"
-import { useDispatch } from "react-redux"
+import { useDispatch, useSelector } from "react-redux"
+import type { AppDispatch, RootState } from "../store"
 import { ROUTES } from "../../Routes"
 import Header from "../components/Header"
 import InputField from "../components/InputField"
 import TruckCard from "../components/TruckCard"
 import CartIndicator from "../components/CartIndicator"
 import { getTrucksList, addTruckToCart } from "../modules/trucksApi"
-import { useCart, useCartItems, addTruckAction } from "../slices/cartSlice"
+import { useCartItems, addTruckAction } from "../slices/cartSlice"
+import { addTruckToDraftAsync, getDraftLogisticAsync } from "../slices/logisticsSlice"
 import type { TruckData } from "../modules/getTruckById"
 
 const ITEMS_PER_PAGE = 3 // Количество грузовиков на странице (уменьшено для демонстрации пагинации)
 
 const TrucksPage = () => {
-  const dispatch = useDispatch()
+  const dispatch = useDispatch<AppDispatch>()
   const [searchParams, setSearchParams] = useSearchParams()
   // Получаем значение поиска из URL напрямую
   const searchQueryFromUrl = searchParams.get("search") || ""
@@ -23,10 +25,22 @@ const TrucksPage = () => {
   const currentPageFromUrl = parseInt(searchParams.get("page") || "1", 10)
   const [searchValue, setSearchValue] = useState(searchQueryFromUrl)
   const [trucks, setTrucks] = useState<TruckData[]>([])
-  const logistic = useCart()
-  const cartItems = useCartItems()
-  const cartCount = cartItems.reduce((acc, item) => acc + (item.count ?? 1), 0)
   const navigate = useNavigate()
+  
+  // Redux selectors
+  const isAuthenticated = useSelector((state: RootState) => state.user.isAuthenticated)
+  const draftCount = useSelector((state: RootState) => state.logistics.draftCount)
+  
+  const cartItems = useCartItems()
+  
+  // Вычисляем количество в корзине
+  const cartCount = useMemo(() => {
+    if (isAuthenticated) {
+      return draftCount
+    } else {
+      return cartItems.reduce((acc, item) => acc + (item.count ?? 1), 0)
+    }
+  }, [isAuthenticated, draftCount, cartItems])
 
   useEffect(() => {
     let isMounted = true
@@ -47,6 +61,13 @@ const TrucksPage = () => {
       isMounted = false
     }
   }, [])
+
+  // Загружаем черновик для авторизованных пользователей при монтировании
+  useEffect(() => {
+    if (isAuthenticated) {
+      dispatch(getDraftLogisticAsync())
+    }
+  }, [isAuthenticated, dispatch])
 
   // Синхронизируем значение в поле ввода с URL при изменении URL (например, при переходе через breadcrumbs)
   // Используем строковое представление searchParams для правильного отслеживания изменений
@@ -76,16 +97,33 @@ const TrucksPage = () => {
   }
 
   const handleRequestClick = async (truckId: number) => {
-    try {
-      // Пытаемся добавить через API
-      await addTruckToCart(truckId)
-      // Также обновляем Redux store
-      dispatch(addTruckAction(truckId))
-      console.info("Грузовик добавлен в корзину")
-    } catch (error) {
-      // В случае ошибки API используем только Redux
-      dispatch(addTruckAction(truckId))
-      console.info("Грузовик добавлен в корзину (локально)")
+    if (isAuthenticated) {
+      // Для авторизованных пользователей используем API через Redux
+      try {
+        console.log("Добавление грузовика в заявку, ID:", truckId)
+        const result = await dispatch(addTruckToDraftAsync(truckId)).unwrap()
+        console.log("Результат добавления:", result)
+        await dispatch(getDraftLogisticAsync())
+        console.info("✅ Грузовик успешно добавлен в заявку")
+      } catch (error: any) {
+        console.error("❌ Ошибка при добавлении грузовика:", error)
+        console.error("Детали ошибки:", {
+          message: error?.message,
+          response: error?.response,
+          data: error?.response?.data,
+        })
+        alert(`Ошибка при добавлении грузовика: ${error?.message || error || 'Неизвестная ошибка'}`)
+      }
+    } else {
+      // Для гостей используем локальное хранилище
+      try {
+        await addTruckToCart(truckId)
+        dispatch(addTruckAction(truckId))
+        console.info("Грузовик добавлен в корзину")
+      } catch (error) {
+        dispatch(addTruckAction(truckId))
+        console.info("Грузовик добавлен в корзину (локально)")
+      }
     }
   }
 
@@ -97,12 +135,13 @@ const TrucksPage = () => {
   }
 
   const handleCartClick = () => {
-    if (logistic && !logistic.isMock) {
-      window.location.href = `/logistic/${logistic.id}`
-      return
+    if (isAuthenticated) {
+      // Для авторизованных переходим на страницу черновика
+      navigate(ROUTES.LOGISTICS)
+    } else {
+      // Для неавторизованных тоже переходим на страницу корзины
+      navigate(ROUTES.LOGISTICS)
     }
-
-    navigate(ROUTES.LOGISTICS)
   }
 
   const filteredTrucks = useMemo(() => {
@@ -185,13 +224,15 @@ const TrucksPage = () => {
             {paginatedTrucks.length > 0 ? (
               paginatedTrucks.map((truck) => (
                 <Col key={truck.id}>
-                  <TruckCard
-                    image={truck.imgURL}
-                    model={truck.title}
-                    description={truck.preview ?? truck.description}
-                    onRequestClick={() => handleRequestClick(truck.id)}
-                    onImageClick={() => handleImageClick(truck.id)}
-                  />
+                <TruckCard
+                  image={truck.imgURL}
+                  model={truck.title}
+                  description={truck.preview ?? truck.description}
+                  onRequestClick={() => handleRequestClick(truck.id)}
+                  onImageClick={() => handleImageClick(truck.id)}
+                  isAuthenticated={isAuthenticated}
+                  showAddButton={true}
+                />
                 </Col>
               ))
             ) : (

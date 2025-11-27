@@ -1,13 +1,22 @@
 import "./LogisticDraftPage.css";
 import { useEffect, useMemo, useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import type { AppDispatch, RootState } from "../store";
 import Header from "../components/Header";
-import { Button, Form } from "react-bootstrap";
-import { removeTruckFromCart, deleteDraftLogistic } from "../modules/trucksApi";
+import { Button, Form, Alert, Spinner } from "react-bootstrap";
+import { 
+  getDraftLogisticAsync, 
+  getLogisticByIdAsync,
+  removeTruckFromLogisticAsync,
+  deleteLogisticAsync,
+  saveLogisticAsync,
+  clearError,
+} from "../slices/logisticsSlice";
 import { useCart, removeTruckAction, resetAction } from "../slices/cartSlice";
+import { removeTruckFromCart, deleteDraftLogistic } from "../modules/trucksApi";
 import type { LogisticItemData } from "../modules/logisticTypes";
 import defaultImage from "../assets/DefaultImage.png";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { ROUTES } from "../../Routes";
 
 interface CalculationState {
@@ -21,14 +30,48 @@ const defaultCalculationState = (item: LogisticItemData): CalculationState => ({
 });
 
 const LogisticDraftPage = () => {
-  const dispatch = useDispatch();
-  const logistic = useCart();
+  const dispatch = useDispatch<AppDispatch>();
+  const { id } = useParams<{ id?: string }>();
+  const navigate = useNavigate();
+  
+  // Redux state
+  const { currentLogistic, loading, error, isDraft } = useSelector((state: RootState) => state.logistics);
+  const isAuthenticated = useSelector((state: RootState) => state.user.isAuthenticated);
+  
+  // Fallback to cart for guests
+  const cartLogistic = useCart();
+  const logistic = currentLogistic || cartLogistic;
+  
   const [calculations, setCalculations] = useState<Record<number, CalculationState>>({});
   const [inputValues, setInputValues] = useState<Record<number, CalculationState>>({});
-  const navigate = useNavigate();
+
+  // Load logistic data
+  useEffect(() => {
+    if (!isAuthenticated) {
+      // For guests, use cart
+      return;
+    }
+    
+    if (id) {
+      // Load specific logistic by ID
+      dispatch(getLogisticByIdAsync(parseInt(id)));
+    } else {
+      // Load draft - сначала получаем ID, потом загружаем полные данные
+      dispatch(getDraftLogisticAsync()).then((result) => {
+        if (result.type === 'logistics/getDraftLogisticAsync/fulfilled') {
+          const payload = result.payload as any;
+          const draftId = payload?.id || payload?.ID;
+          if (draftId) {
+            // Загружаем полные данные заявки по ID
+            dispatch(getLogisticByIdAsync(draftId));
+          }
+        }
+      });
+    }
+  }, [dispatch, id, isAuthenticated]);
 
   useEffect(() => {
-    if (logistic && logistic.items.length > 0) {
+    if (logistic && logistic.items && logistic.items.length > 0) {
       const map: Record<number, CalculationState> = {};
       const inputMap: Record<number, CalculationState> = {};
       logistic.items.forEach((item) => {
@@ -43,6 +86,12 @@ const LogisticDraftPage = () => {
       setInputValues({});
     }
   }, [logistic]);
+  
+  useEffect(() => {
+    return () => {
+      dispatch(clearError());
+    };
+  }, [dispatch]);
 
   const computedItems = useMemo(() => {
     if (!logistic) return [] as Array<{ item: LogisticItemData; calc: CalculationState; truckCount: number; totalCost: number; pricePerKm: number; }>;
@@ -102,44 +151,128 @@ const LogisticDraftPage = () => {
 
   const handleRemoveTruck = async (item: LogisticItemData) => {
     if (!logistic) return;
-    try {
-      await removeTruckFromCart(logistic.id, item.truckId);
-    } catch (error) {
-      console.warn("Ошибка при удалении через API, используем Redux", error);
+    
+    if (isAuthenticated && currentLogistic) {
+      // Use Redux async thunk for authenticated users
+      try {
+        await dispatch(removeTruckFromLogisticAsync({ 
+          logisticId: logistic.id, 
+          truckId: item.truckId 
+        })).unwrap();
+      } catch (error) {
+        console.error("Ошибка при удалении грузовика:", error);
+      }
+    } else {
+      // Fallback for guests
+      try {
+        await removeTruckFromCart(logistic.id, item.truckId);
+      } catch (error) {
+        console.warn("Ошибка при удалении через API, используем Redux", error);
+      }
+      dispatch(removeTruckAction(item.truckId));
     }
-    // Обновляем Redux store
-    dispatch(removeTruckAction(item.truckId));
   };
 
+  // Функция для обновления количества грузовика (можно использовать в будущем)
+  // const handleUpdateCount = async (truckId: number, newCount: number) => {
+  //   if (!logistic || !isAuthenticated || !currentLogistic) return;
+  //   
+  //   try {
+  //     await dispatch(updateLogisticTruckAsync({
+  //       logisticId: logistic.id,
+  //       truckId,
+  //       count: newCount,
+  //     })).unwrap();
+  //   } catch (error) {
+  //     console.error("Ошибка при обновлении количества:", error);
+  //   }
+  // };
+
   const handleReset = async () => {
-    if (logistic) {
+    if (!logistic) return;
+    
+    if (isAuthenticated && currentLogistic) {
+      // Use Redux async thunk for authenticated users
+      try {
+        await dispatch(deleteLogisticAsync(logistic.id)).unwrap();
+        navigate(ROUTES.ALBUMS);
+      } catch (error) {
+        console.error("Ошибка при удалении заявки:", error);
+      }
+    } else {
+      // Fallback for guests
       try {
         await deleteDraftLogistic(logistic.id);
       } catch (error) {
         console.warn("Ошибка при удалении через API, используем Redux", error);
       }
-      // Обновляем Redux store
       dispatch(resetAction());
+      navigate(ROUTES.ALBUMS);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!logistic || !isAuthenticated || !currentLogistic) return;
+    
+    try {
+      await dispatch(saveLogisticAsync(logistic.id)).unwrap();
+      // После сохранения переходим к списку заявок
+      navigate(ROUTES.LOGISTICS_LIST);
+    } catch (error) {
+      console.error("Ошибка при сохранении заявки:", error);
     }
   };
 
   const handleBackToList = () => {
-    navigate(ROUTES.ALBUMS);
+    if (isAuthenticated) {
+      navigate(ROUTES.LOGISTICS_LIST);
+    } else {
+      navigate(ROUTES.ALBUMS);
+    }
   };
+  
+  if (loading) {
+    return (
+      <div className="logistic-page">
+        <Header />
+        <div className="logistic-container">
+          <div className="logistic-loading">
+            <Spinner animation="border" />
+            <p>Загрузка заявки...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
+  if (!logistic && !loading) {
+    return (
+      <div className="logistic-page">
+        <Header />
+        <div className="logistic-container">
+          <Alert variant="info">Заявка не найдена</Alert>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="logistic-page">
       <Header />
 
       <div className="logistic-container">
+        {error && <Alert variant="danger" className="logistic-error">{error}</Alert>}
+        
         <div className="logistic-header">
           <Button variant="link" className="logistic-back" onClick={handleBackToList}>
-            ← Вернуться к списку грузовиков
+            ← {isAuthenticated ? "Вернуться к списку заявок" : "Вернуться к списку грузовиков"}
           </Button>
           <h1 className="logistic-title">
             {logistic ? `Заявка на логистику № ${logistic.id}` : "Черновая заявка"}
           </h1>
-          <p className="logistic-subtitle">Управляйте своими операциями по логистике</p>
+          <p className="logistic-subtitle">
+            {isDraft ? "Управляйте своими операциями по логистике" : "Просмотр заявки"}
+          </p>
         </div>
 
         {logistic && (
@@ -178,6 +311,7 @@ const LogisticDraftPage = () => {
                               value={weightInputValue}
                               min={0}
                               onChange={(event) => handleChange(item.truckId, "weight", parseFloat(event.target.value))}
+                              disabled={!isDraft}
                             />
                           </div>
                           <div className="logistic-input-group">
@@ -187,29 +321,37 @@ const LogisticDraftPage = () => {
                               value={distanceInputValue}
                               min={0}
                               onChange={(event) => handleChange(item.truckId, "distance", parseFloat(event.target.value))}
+                              disabled={!isDraft}
                             />
                           </div>
-                          <Button
-                            variant="primary"
-                            size="sm"
-                            onClick={() => handleCalculate(item.truckId)}
-                            className="logistic-calculate-btn"
-                          >
-                            Рассчитать
-                          </Button>
+                          {isDraft && (
+                            <Button
+                              variant="primary"
+                              size="sm"
+                              onClick={() => handleCalculate(item.truckId)}
+                              className="logistic-calculate-btn"
+                            >
+                              Рассчитать
+                            </Button>
+                          )}
                         </div>
                         <div className="logistic-row-summary">
                           <div className="logistic-row-summary-line">Машин: {truckCount}</div>
                           <div className="logistic-row-summary-line">
                             Итого: {totalCost.toLocaleString("ru-RU", { maximumFractionDigits: 2 })} ₽
                           </div>
-                          <Button
-                            variant="outline-danger"
-                            size="sm"
-                            onClick={() => handleRemoveTruck(item)}
-                          >
-                            Удалить
-                          </Button>
+                          {isDraft && (
+                            <Button
+                              variant="outline-danger"
+                              size="sm"
+                              onClick={() => handleRemoveTruck(item)}
+                            >
+                              Удалить
+                            </Button>
+                          )}
+                          {!isDraft && (
+                            <div className="logistic-view-only">Только просмотр</div>
+                          )}
                         </div>
                       </div>
                     );
@@ -233,9 +375,16 @@ const LogisticDraftPage = () => {
                 <strong>{totalSummary.amount.toLocaleString("ru-RU", { maximumFractionDigits: 2 })} ₽</strong>
               </div>
 
-              <Button variant="outline-danger" onClick={handleReset} className="logistic-summary-delete">
-                Удалить заявку
-              </Button>
+              {isDraft && (
+                <>
+                  <Button variant="success" onClick={handleSave} className="logistic-summary-save" disabled={!logistic || logistic.items.length === 0}>
+                    Сохранить заявку
+                  </Button>
+                  <Button variant="outline-danger" onClick={handleReset} className="logistic-summary-delete">
+                    Удалить заявку
+                  </Button>
+                </>
+              )}
             </aside>
           </div>
         )}

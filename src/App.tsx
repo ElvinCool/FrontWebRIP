@@ -5,6 +5,10 @@ import { ROUTES } from "../Routes"
 import HomeLogisticPage from "./pages/HomeLogisticPage"
 import TrucksPage from "./pages/TrucksPage"
 import LogisticDraftPage from "./pages/LogisticDraftPage"
+import LoginPage from "./pages/LoginPage"
+import RegisterPage from "./pages/RegisterPage"
+import LogisticsListPage from "./pages/LogisticsListPage"
+import ProfilePage from "./pages/ProfilePage"
 
 function App() {
   useEffect(() => {
@@ -34,6 +38,11 @@ function App() {
       <Route path={ROUTES.ALBUMS} element={<TrucksPage />} />
       <Route path={`${ROUTES.ALBUMS}/:id`} element={<TruckDetPage />} />
       <Route path={ROUTES.LOGISTICS} element={<LogisticDraftPage />} />
+      <Route path={`${ROUTES.LOGISTICS}/:id`} element={<LogisticDraftPage />} />
+      <Route path={ROUTES.LOGISTICS_LIST} element={<LogisticsListPage />} />
+      <Route path={ROUTES.LOGIN} element={<LoginPage />} />
+      <Route path={ROUTES.REGISTER} element={<RegisterPage />} />
+      <Route path={ROUTES.PROFILE} element={<ProfilePage />} />
     </Routes>
   )
 }

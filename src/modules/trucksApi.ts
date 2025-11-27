@@ -4,8 +4,10 @@ import defaultImage from "../assets/DefaultImage.png";
 import { cartMockStore } from "./cartMockStore";
 import type { LogisticData, LogisticItemData } from "./logisticTypes";
 import { dest_api, dest_img } from "../target_config";
+import { api } from "../api";
 
-const API_BASE = dest_api;
+// API_BASE должен включать /api, так как пути в сгенерированном API уже содержат /api
+const API_BASE = dest_api ? `${dest_api}/api` : "/api";
 const STATIC_BASE = "/";
 
 /**
@@ -119,7 +121,7 @@ const normalizeLogisticItem = (item: any): LogisticItemData | null => {
   };
 };
 
-const normalizeLogistic = (payload: any): LogisticData | null => {
+export const normalizeLogistic = (payload: any): LogisticData | null => {
   if (!payload) return null;
 
   if (payload.items && Array.isArray(payload.items)) {
@@ -134,6 +136,20 @@ const normalizeLogistic = (payload: any): LogisticData | null => {
     };
   }
 
+  // Обрабатываем logistic_trucks из API (snake_case)
+  if (Array.isArray(payload.logistic_trucks)) {
+    const items = (payload.logistic_trucks as any[])
+      .map((rawItem) => normalizeLogisticItem(rawItem))
+      .filter((item): item is LogisticItemData => Boolean(item));
+    return {
+      id: payload.id ?? payload.ID ?? 0,
+      status: payload.status ?? payload.Status ?? "draft",
+      items,
+      isMock: false,
+    };
+  }
+
+  // Обрабатываем LogisticTrucks (PascalCase)
   if (Array.isArray(payload.LogisticTrucks)) {
     const items = (payload.LogisticTrucks as any[])
       .map((rawItem) => normalizeLogisticItem(rawItem))
@@ -168,12 +184,11 @@ const fetchJson = async (input: RequestInfo, init?: RequestInit) => {
 
 export const getTrucksList = async (): Promise<TrucksResult> => {
   try {
-    const url = `${API_BASE}/trucks`;
-    console.log("getTrucksList: запрос к", url);
+    // Используем сгенерированный API
+    console.log("getTrucksList: запрос через API");
     
-    const payload = await fetchJson(url, {
-      credentials: "include",
-    });
+    const response = await api.trucks.trucksList();
+    const payload = response.data;
 
     console.log("getTrucksList: получен ответ", payload);
 
@@ -196,9 +211,14 @@ export const getTrucksList = async (): Promise<TrucksResult> => {
 
 export const getTruckById = async (id: number): Promise<TruckData | null> => {
   try {
-    const payload = await fetchJson(`${API_BASE}/truck/${id}`, {
-      credentials: "include",
-    });
+    // Используем сгенерированный API
+    const response = await api.truck.truckDetail({ id });
+    // response.data может быть void, используем response напрямую или проверяем наличие данных
+    const payload = (response as any).data;
+
+    if (!payload) {
+      return null;
+    }
 
     const normalizedList = normalizeList(payload);
 
@@ -206,7 +226,7 @@ export const getTruckById = async (id: number): Promise<TruckData | null> => {
       return normalizedList[0];
     }
 
-    if (payload && !Array.isArray(payload)) {
+    if (!Array.isArray(payload)) {
       const normalized = normalizeTruck(payload);
       return normalized;
     }

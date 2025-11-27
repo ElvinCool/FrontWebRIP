@@ -4,6 +4,7 @@ import { Carousel } from "react-bootstrap";
 import truck1 from "../assets/truck1.png";
 import truck2 from "../assets/truck2.png";
 import truck3 from "../assets/truck3.png";
+import Header from "../components/Header";
 import "./HomeLogisticPage.css";
 
 const slides = [
@@ -27,6 +28,7 @@ const slides = [
 const HomePage = () => {
   return (
     <div className="home-page-container">
+      <Header />
       <Carousel fade className="fullscreen-carousel">
         {slides.map((slide, idx) => (
           <Carousel.Item

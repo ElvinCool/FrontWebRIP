@@ -1,7 +1,7 @@
 import "./TrucksPage.css"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { Row, Col } from "react-bootstrap"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useSearchParams } from "react-router-dom"
 import { ROUTES } from "../../Routes"
 import Header from "../components/Header"
 import InputField from "../components/InputField"
@@ -12,8 +12,10 @@ import type { TruckData } from "../modules/getTruckById"
 import type { LogisticData } from "../modules/logisticTypes"
 
 const TrucksPage = () => {
-  const [searchValue, setSearchValue] = useState("")
-  const [searchQuery, setSearchQuery] = useState("")
+  const [searchParams, setSearchParams] = useSearchParams()
+  // Используем значение из URL как источник истины для поиска
+  const searchQuery = useMemo(() => searchParams.get("search") || "", [searchParams])
+  const [searchValue, setSearchValue] = useState(searchQuery)
   const [trucks, setTrucks] = useState<TruckData[]>([])
   const [cartCount, setCartCount] = useState<number>(0)
   const [logistic, setLogistic] = useState<LogisticData | null>(null)
@@ -52,8 +54,21 @@ const TrucksPage = () => {
     }
   }, [refreshCart])
 
+  // Синхронизируем значение в поле ввода с URL при изменении URL (например, при переходе через breadcrumbs)
+  useEffect(() => {
+    setSearchValue(searchQuery)
+  }, [searchQuery])
+
   const handleSearch = () => {
-    setSearchQuery(searchValue.trim())
+    const trimmedValue = searchValue.trim()
+    // Обновляем URL с параметром поиска
+    const newSearchParams = new URLSearchParams(searchParams)
+    if (trimmedValue) {
+      newSearchParams.set("search", trimmedValue)
+    } else {
+      newSearchParams.delete("search")
+    }
+    setSearchParams(newSearchParams, { replace: true })
   }
 
   const handleRequestClick = async (truckId: number) => {
@@ -67,7 +82,9 @@ const TrucksPage = () => {
   }
 
   const handleImageClick = (truckId: number) => {
-    navigate(`${ROUTES.ALBUMS}/${truckId}`)
+    // Сохраняем параметр поиска при переходе на страницу деталей
+    const searchParam = searchQuery ? `?search=${encodeURIComponent(searchQuery)}` : ""
+    navigate(`${ROUTES.ALBUMS}/${truckId}${searchParam}`)
   }
 
   const handleCartClick = () => {

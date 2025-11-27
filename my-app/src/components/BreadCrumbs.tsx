@@ -1,6 +1,6 @@
 import "./BreadCrumbs.css"
 import React from "react"
-import { Link } from "react-router-dom"
+import { Link, useSearchParams } from "react-router-dom"
 
 interface ICrumb {
   label: string
@@ -12,6 +12,18 @@ interface BreadCrumbsProps {
 }
 
 const BreadCrumbs = ({ crumbs }: BreadCrumbsProps) => {
+  const [searchParams] = useSearchParams()
+  const searchQuery = searchParams.get("search")
+
+  const getPathWithSearch = (path?: string) => {
+    if (!path) return ""
+    if (searchQuery) {
+      const separator = path.includes("?") ? "&" : "?"
+      return `${path}${separator}search=${encodeURIComponent(searchQuery)}`
+    }
+    return path
+  }
+
   return (
     <ul className="breadcrumbs">
       {!!crumbs.length &&
@@ -22,7 +34,7 @@ const BreadCrumbs = ({ crumbs }: BreadCrumbsProps) => {
               <li>{crumb.label}</li>
             ) : (
               <li>
-                <Link to={crumb.path || ""}>{crumb.label}</Link>
+                <Link to={getPathWithSearch(crumb.path)}>{crumb.label}</Link>
               </li>
             )}
           </React.Fragment>

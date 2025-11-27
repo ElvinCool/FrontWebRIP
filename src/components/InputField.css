@@ -1,0 +1,43 @@
+.inputField {
+    display: flex;
+    width: 100%;
+    background-color: transparent;
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.inputField > input {
+    flex: 1;
+    padding: 1rem 1.5rem;
+    border: none;
+    border-radius: 0 0 0 0;
+    outline: none;
+    font-size: 1rem;
+    background-color: #ffffff;
+    color: #1a4d7a;
+}
+
+.inputField > input::placeholder {
+    color: #4B5563;
+}
+
+.inputField > button {
+    border-radius: 0 0 0 0;
+    padding: 1rem 2.25rem;
+    background-color: #ff6b35;
+    border: none;
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.inputField > button:hover {
+    background-color: #e55a2b;
+}
+
+.inputField > button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}

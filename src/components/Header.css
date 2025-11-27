@@ -1,0 +1,29 @@
+.trucks-header {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  padding: 1.5rem 2rem;
+  background-color: #0d66dd;
+  width: 100%;
+  height: 64px;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 10;
+}
+
+.logo-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.logitruck {
+  height: 42px;
+}
+

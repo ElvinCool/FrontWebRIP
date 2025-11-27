@@ -1,7 +1,9 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
+  base: '/WebRIP/',
   server: {
     port: 3000,
     proxy: {
@@ -17,5 +19,36 @@ export default defineConfig({
       },
     },
   },
-  plugins: [react()],
+  plugins: [
+    react(),
+    VitePWA({
+      registerType: 'autoUpdate',
+      devOptions: {
+        enabled: true,
+      },
+      manifest: {
+        name: 'LogiTruck',
+        short_name: 'LogiTruck',
+        start_url: '/WebRIP/',
+        display: 'standalone',
+        background_color: '#ffffff',
+        theme_color: '#0d66dd',
+        orientation: 'portrait-primary',
+        icons: [
+          {
+            src: '/WebRIP/logo192.png',
+            type: 'image/png',
+            sizes: '192x192',
+            purpose: 'any maskable',
+          },
+          {
+            src: '/WebRIP/logo512.png',
+            type: 'image/png',
+            sizes: '512x512',
+            purpose: 'any maskable',
+          },
+        ],
+      },
+    }),
+  ],
 })

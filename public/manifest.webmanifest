@@ -1,0 +1,26 @@
+{
+  "name": "LogiTruck",
+  "short_name": "LogiTruck",
+  "start_url": "/WebRIP/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0d66dd",
+  "lang": "ru",
+  "scope": "/WebRIP/",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/WebRIP/logo192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/WebRIP/logo512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ]
+}
+

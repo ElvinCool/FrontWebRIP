@@ -1,36 +1,28 @@
 import "./TrucksPage.css"
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { Row, Col } from "react-bootstrap"
 import { useNavigate, useSearchParams } from "react-router-dom"
+import { useDispatch } from "react-redux"
 import { ROUTES } from "../../Routes"
 import Header from "../components/Header"
 import InputField from "../components/InputField"
 import TruckCard from "../components/TruckCard"
 import CartIndicator from "../components/CartIndicator"
-import { getTrucksList, addTruckToCart, fetchDraftLogistic } from "../modules/trucksApi"
+import { getTrucksList, addTruckToCart } from "../modules/trucksApi"
+import { useCart, useCartItems, addTruckAction } from "../slices/cartSlice"
 import type { TruckData } from "../modules/getTruckById"
-import type { LogisticData } from "../modules/logisticTypes"
 
 const TrucksPage = () => {
+  const dispatch = useDispatch()
   const [searchParams, setSearchParams] = useSearchParams()
   // Получаем значение поиска из URL напрямую
   const searchQueryFromUrl = searchParams.get("search") || ""
   const [searchValue, setSearchValue] = useState(searchQueryFromUrl)
   const [trucks, setTrucks] = useState<TruckData[]>([])
-  const [cartCount, setCartCount] = useState<number>(0)
-  const [logistic, setLogistic] = useState<LogisticData | null>(null)
+  const logistic = useCart()
+  const cartItems = useCartItems()
+  const cartCount = cartItems.reduce((acc, item) => acc + (item.count ?? 1), 0)
   const navigate = useNavigate()
-
-  const refreshCart = useCallback(async () => {
-    const data: LogisticData | null = await fetchDraftLogistic()
-    setLogistic(data)
-    if (!data) {
-      setCartCount(0)
-      return
-    }
-    const count = data.items.reduce((acc, item) => acc + (item.count ?? 1), 0)
-    setCartCount(count)
-  }, [])
 
   useEffect(() => {
     let isMounted = true
@@ -47,12 +39,10 @@ const TrucksPage = () => {
         }
       })
 
-    refreshCart()
-
     return () => {
       isMounted = false
     }
-  }, [refreshCart])
+  }, [])
 
   // Синхронизируем значение в поле ввода с URL при изменении URL (например, при переходе через breadcrumbs)
   // Используем строковое представление searchParams для правильного отслеживания изменений
@@ -76,11 +66,15 @@ const TrucksPage = () => {
 
   const handleRequestClick = async (truckId: number) => {
     try {
+      // Пытаемся добавить через API
       await addTruckToCart(truckId)
-      await refreshCart()
+      // Также обновляем Redux store
+      dispatch(addTruckAction(truckId))
       console.info("Грузовик добавлен в корзину")
     } catch (error) {
-      console.error("Не удалось добавить грузовик", error)
+      // В случае ошибки API используем только Redux
+      dispatch(addTruckAction(truckId))
+      console.info("Грузовик добавлен в корзину (локально)")
     }
   }
 

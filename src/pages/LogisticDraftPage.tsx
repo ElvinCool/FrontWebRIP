@@ -1,9 +1,11 @@
 import "./LogisticDraftPage.css";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useDispatch } from "react-redux";
 import Header from "../components/Header";
-import { Button, Form, Spinner } from "react-bootstrap";
-import { fetchDraftLogistic, removeTruckFromCart, deleteDraftLogistic } from "../modules/trucksApi";
-import type { LogisticData, LogisticItemData } from "../modules/logisticTypes";
+import { Button, Form } from "react-bootstrap";
+import { removeTruckFromCart, deleteDraftLogistic } from "../modules/trucksApi";
+import { useCart, removeTruckAction, resetAction } from "../slices/cartSlice";
+import type { LogisticItemData } from "../modules/logisticTypes";
 import defaultImage from "../assets/DefaultImage.png";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "../../Routes";
@@ -19,43 +21,28 @@ const defaultCalculationState = (item: LogisticItemData): CalculationState => ({
 });
 
 const LogisticDraftPage = () => {
-  const [logistic, setLogistic] = useState<LogisticData | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  const dispatch = useDispatch();
+  const logistic = useCart();
   const [calculations, setCalculations] = useState<Record<number, CalculationState>>({});
   const [inputValues, setInputValues] = useState<Record<number, CalculationState>>({});
   const navigate = useNavigate();
 
-  const loadLogistic = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await fetchDraftLogistic();
-      setLogistic(data);
-      if (data) {
-        const map: Record<number, CalculationState> = {};
-        const inputMap: Record<number, CalculationState> = {};
-        data.items.forEach((item) => {
-          const defaultState = defaultCalculationState(item);
-          map[item.truckId] = defaultState;
-          inputMap[item.truckId] = defaultState;
-        });
-        setCalculations(map);
-        setInputValues(inputMap);
-      } else {
-        setCalculations({});
-        setInputValues({});
-      }
-    } catch (err) {
-      setError((err as Error).message);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
   useEffect(() => {
-    loadLogistic();
-  }, [loadLogistic]);
+    if (logistic && logistic.items.length > 0) {
+      const map: Record<number, CalculationState> = {};
+      const inputMap: Record<number, CalculationState> = {};
+      logistic.items.forEach((item) => {
+        const defaultState = defaultCalculationState(item);
+        map[item.truckId] = defaultState;
+        inputMap[item.truckId] = defaultState;
+      });
+      setCalculations(map);
+      setInputValues(inputMap);
+    } else {
+      setCalculations({});
+      setInputValues({});
+    }
+  }, [logistic]);
 
   const computedItems = useMemo(() => {
     if (!logistic) return [] as Array<{ item: LogisticItemData; calc: CalculationState; truckCount: number; totalCost: number; pricePerKm: number; }>;
@@ -115,14 +102,24 @@ const LogisticDraftPage = () => {
 
   const handleRemoveTruck = async (item: LogisticItemData) => {
     if (!logistic) return;
-    await removeTruckFromCart(logistic.id, item.truckId);
-    await loadLogistic();
+    try {
+      await removeTruckFromCart(logistic.id, item.truckId);
+    } catch (error) {
+      console.warn("Ошибка при удалении через API, используем Redux", error);
+    }
+    // Обновляем Redux store
+    dispatch(removeTruckAction(item.truckId));
   };
 
   const handleReset = async () => {
     if (logistic) {
-      await deleteDraftLogistic(logistic.id);
-      await loadLogistic();
+      try {
+        await deleteDraftLogistic(logistic.id);
+      } catch (error) {
+        console.warn("Ошибка при удалении через API, используем Redux", error);
+      }
+      // Обновляем Redux store
+      dispatch(resetAction());
     }
   };
 
@@ -145,15 +142,7 @@ const LogisticDraftPage = () => {
           <p className="logistic-subtitle">Управляйте своими операциями по логистике</p>
         </div>
 
-        {loading && (
-          <div className="logistic-loader">
-            <Spinner animation="border" />
-          </div>
-        )}
-
-        {error && !loading && <div className="logistic-error">{error}</div>}
-
-        {!loading && logistic && (
+        {logistic && (
           <div className="logistic-content">
             <div className="logistic-main">
               {computedItems.length === 0 && (

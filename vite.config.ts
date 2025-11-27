@@ -27,6 +27,7 @@ export default defineConfig({
         enabled: true,
       },
       manifest: {
+        id: '/WebRIP/',
         name: 'LogiTruck',
         short_name: 'LogiTruck',
         start_url: '/WebRIP/',
@@ -36,15 +37,9 @@ export default defineConfig({
         orientation: 'portrait-primary',
         icons: [
           {
-            src: '/WebRIP/logo192.png',
-            type: 'image/png',
-            sizes: '192x192',
-            purpose: 'any maskable',
-          },
-          {
-            src: '/WebRIP/logo512.png',
-            type: 'image/png',
-            sizes: '512x512',
+            src: '/WebRIP/vite.svg',
+            type: 'image/svg+xml',
+            sizes: 'any',
             purpose: 'any maskable',
           },
         ],

@@ -10,6 +10,7 @@ import {
   removeTruckFromLogisticAsync,
   deleteLogisticAsync,
   saveLogisticAsync,
+  updateLogisticTruckAsync,
   clearError,
 } from "../slices/logisticsSlice";
 import { useCart, removeTruckAction, resetAction } from "../slices/cartSlice";
@@ -26,7 +27,9 @@ interface CalculationState {
 
 const defaultCalculationState = (item: LogisticItemData): CalculationState => ({
   weight: item.truck.weight ?? 1000,
-  distance: 250,
+  // Используем count из item (который содержит Distance из БД), если он есть и > 0
+  // Иначе используем значение по умолчанию 250
+  distance: (item.count && item.count > 0) ? item.count : 250,
 });
 
 const LogisticDraftPage = () => {
@@ -70,12 +73,55 @@ const LogisticDraftPage = () => {
     }
   }, [dispatch, id, isAuthenticated]);
 
+  // Автоматическое обновление данных для завершенных заявок, если цены еще не рассчитаны
+  useEffect(() => {
+    if (!id || !logistic || !isAuthenticated) return;
+    
+    // Проверяем, завершена ли заявка и есть ли незаполненные цены
+    const statusStr = String(logistic.status || '').toLowerCase();
+    const isCompleted = statusStr === 'завершен' || statusStr === 'completed' || statusStr === 'closed';
+    
+    if (isCompleted && logistic.items && logistic.items.length > 0) {
+      // Проверяем, есть ли элементы с ценой = 0 или null
+      const hasUncalculatedPrices = logistic.items.some(
+        (item) => !item.price || item.price === 0
+      );
+      
+      if (hasUncalculatedPrices) {
+        // Обновляем данные каждые 3 секунды, пока цены не будут рассчитаны
+        // Максимум 20 попыток (1 минута)
+        let attempts = 0;
+        const maxAttempts = 20;
+        
+        const intervalId = setInterval(() => {
+          attempts++;
+          if (attempts > maxAttempts) {
+            console.log('Stopped auto-refreshing: max attempts reached');
+            clearInterval(intervalId);
+            return;
+          }
+          
+          console.log(`Auto-refreshing logistic data (attempt ${attempts}/${maxAttempts})...`);
+          dispatch(getLogisticByIdAsync(parseInt(id)));
+        }, 3000);
+        
+        // Очищаем интервал при размонтировании
+        return () => {
+          clearInterval(intervalId);
+        };
+      }
+    }
+  }, [dispatch, id, logistic, isAuthenticated]);
+
   useEffect(() => {
     if (logistic && logistic.items && logistic.items.length > 0) {
       const map: Record<number, CalculationState> = {};
       const inputMap: Record<number, CalculationState> = {};
       logistic.items.forEach((item) => {
+        // Используем значение из БД (item.count содержит CountLogistics)
+        // Если count > 0, используем его, иначе значение по умолчанию
         const defaultState = defaultCalculationState(item);
+        console.log(`Initializing state for truck ${item.truckId}: count=${item.count}, distance=${defaultState.distance}`);
         map[item.truckId] = defaultState;
         inputMap[item.truckId] = defaultState;
       });
@@ -101,10 +147,13 @@ const LogisticDraftPage = () => {
       const weightValue = calc.weight ?? 0;
       const distanceValue = calc.distance ?? 0;
       const capacity = item.truck.weight ?? 0;
-      const baseCount = item.count ?? 1;
+      // Используем countLogistics (количество машин) из БД, если есть, иначе вычисляем по весу
+      const baseCount = item.countLogistics ?? 1;
       const trucksByWeight = capacity > 0 ? Math.ceil(weightValue / capacity) : 1;
       const truckCount = Math.max(baseCount, trucksByWeight || 1);
-      const pricePerKm = item.price ?? item.truck.price ?? 0;
+      // Используем рассчитанную цену из LogisticTruck, если она есть и > 0
+      // Иначе используем цену грузовика за км
+      const pricePerKm = (item.price && item.price > 0) ? item.price : (item.truck.price ?? 0);
       const totalCost = pricePerKm * distanceValue * truckCount;
 
       return {
@@ -215,7 +264,36 @@ const LogisticDraftPage = () => {
     if (!logistic || !isAuthenticated || !currentLogistic) return;
     
     try {
-      await dispatch(saveLogisticAsync(logistic.id)).unwrap();
+      // Подготавливаем данные для обновления Distance (километры) из значений distance
+      // ВАЖНО: используем inputValues, а не calculations, потому что inputValues содержит то, что ввел пользователь
+      const logisticTrucks: Array<{ truck_id: number; distance: number }> = [];
+      
+      if (logistic.items && logistic.items.length > 0) {
+        logistic.items.forEach((item) => {
+          // Используем inputValues - это то, что пользователь ввел в поля
+          const inputState = inputValues[item.truckId];
+          const distance = inputState?.distance ?? 0;
+          
+          console.log(`Saving distance for truck ${item.truckId}: inputState=`, inputState, `distance=`, distance);
+          
+          // Если distance > 0, добавляем в список для обновления
+          if (distance > 0) {
+            logisticTrucks.push({
+              truck_id: item.truckId,
+              distance: distance, // Сохраняем distance (километры)
+            });
+          }
+        });
+      }
+      
+      console.log('Saving logistic with Distance:', logisticTrucks);
+      
+      // Сохраняем заявку с обновлением Distance
+      await dispatch(saveLogisticAsync({ 
+        id: logistic.id, 
+        logisticTrucks: logisticTrucks.length > 0 ? logisticTrucks : undefined 
+      })).unwrap();
+      
       // После сохранения переходим к списку заявок
       navigate(ROUTES.LOGISTICS_LIST);
     } catch (error) {

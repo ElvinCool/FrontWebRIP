@@ -1,5 +1,7 @@
 import { useEffect } from "react"
+import { useDispatch } from "react-redux"
 import { Route, Routes } from "react-router-dom"
+import type { AppDispatch } from "./store"
 import TruckDetPage  from "./pages/TruckDetPage"
 import { ROUTES } from "../Routes"
 import HomeLogisticPage from "./pages/HomeLogisticPage"
@@ -9,8 +11,21 @@ import LoginPage from "./pages/LoginPage"
 import RegisterPage from "./pages/RegisterPage"
 import LogisticsListPage from "./pages/LogisticsListPage"
 import ProfilePage from "./pages/ProfilePage"
+import { checkAuth, getCurrentUserAsync } from "./slices/userSlice"
 
 function App() {
+  const dispatch = useDispatch<AppDispatch>();
+
+  useEffect(() => {
+    // Проверяем наличие JWT токена при загрузке приложения
+    dispatch(checkAuth());
+    // Пытаемся получить данные пользователя, если токен есть
+    const token = localStorage.getItem('jwt_token');
+    if (token) {
+      dispatch(getCurrentUserAsync());
+    }
+  }, [dispatch]);
+
   useEffect(() => {
     // Определение Tauri согласно методическим указаниям (Шаг 2)
     // В Tauri 2.0 проверка наличия Tauri через проверку window.__TAURI__

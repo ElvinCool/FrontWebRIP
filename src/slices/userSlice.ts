@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { api } from '../api';
+import { api, setJWTToken, getJWTToken } from '../api';
 
 interface UserState {
   username: string;
@@ -21,14 +21,17 @@ const initialState: UserState = {
   loading: false,
 };
 
-// Асинхронное действие для авторизации
 export const loginUserAsync = createAsyncThunk(
   'user/loginUserAsync',
   async (credentials: { login: string; password: string }, { rejectWithValue }) => {
     try {
+      // Axios отправляет POST запрос на /api/users/login
+      // Cookie 'sid' будет установлен сервером в ответе
       const response = await api.users.usersLoginCreate(credentials);
       return response.data;
     } catch (error: any) {
+      // rejectWithValue позволяет вернуть кастомное значение при ошибке
+      // Это значение попадет в action.payload в rejected случае
       return rejectWithValue(error?.response?.data?.error || 'Ошибка авторизации');
     }
   }
@@ -95,6 +98,13 @@ const userSlice = createSlice({
     clearError: (state) => {
       state.error = null;
     },
+    // Проверка токена при загрузке приложения
+    checkAuth: (state) => {
+      const token = getJWTToken();
+      if (token) {
+        state.isAuthenticated = true;
+      }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -114,6 +124,10 @@ const userSlice = createSlice({
           state.isModerator = payload.isModerator || false;
           state.login = payload.login || '';
           state.username = payload.login || '';
+          // Сохраняем JWT токен в localStorage
+          if (payload.token) {
+            setJWTToken(payload.token);
+          }
         }
       })
       .addCase(loginUserAsync.rejected, (state, action) => {
@@ -146,6 +160,8 @@ const userSlice = createSlice({
         state.userId = undefined;
         state.isModerator = false;
         state.error = null;
+        // Удаляем JWT токен из localStorage
+        setJWTToken(null);
       })
       .addCase(logoutUserAsync.rejected, (state, action) => {
         state.error = action.payload as string;
@@ -181,6 +197,6 @@ const userSlice = createSlice({
   },
 });
 
-export const { clearError } = userSlice.actions;
+export const { clearError, checkAuth } = userSlice.actions;
 export default userSlice.reducer;
 

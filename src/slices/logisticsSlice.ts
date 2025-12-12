@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { api } from '../api';
+import { api, ContentType } from '../api';
 import type { LogisticData } from '../modules/logisticTypes';
 import { normalizeLogistic } from '../modules/trucksApi';
 
@@ -148,12 +148,30 @@ export const updateLogisticTruckAsync = createAsyncThunk(
 // Сохранение заявки пользователем (статус -> "сформирован")
 export const saveLogisticAsync = createAsyncThunk(
   'logistics/saveLogisticAsync',
-  async (id: number, { rejectWithValue, dispatch }) => {
+  async ({ id, logisticTrucks }: { id: number; logisticTrucks?: Array<{ truck_id: number; distance: number }> }, { rejectWithValue, dispatch }) => {
     try {
-      const response = await api.logistics.logisticsSaveUpdate({ id });
-      // Обновляем текущую заявку после сохранения
-      await dispatch(getLogisticByIdAsync(id));
-      return response.data;
+      // Если переданы данные для обновления LogisticTrucks, отправляем их
+      if (logisticTrucks && logisticTrucks.length > 0) {
+        console.log('Saving logistic with Distance updates:', logisticTrucks);
+        const response = await api.logistics.logisticsSaveUpdate(
+          { id },
+          { 
+            body: { logistic_trucks: logisticTrucks },
+            type: ContentType.Json
+          } as any
+        );
+        console.log('Save response:', response);
+        // Обновляем текущую заявку после сохранения
+        const updatedLogistic = await dispatch(getLogisticByIdAsync(id));
+        console.log('Reloaded logistic after save:', updatedLogistic);
+        return response.data;
+      } else {
+        // Если данных нет, отправляем обычный запрос
+        const response = await api.logistics.logisticsSaveUpdate({ id });
+        // Обновляем текущую заявку после сохранения
+        await dispatch(getLogisticByIdAsync(id));
+        return response.data;
+      }
     } catch (error: any) {
       return rejectWithValue(error?.response?.data?.error || 'Ошибка при сохранении заявки');
     }

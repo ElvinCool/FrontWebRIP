@@ -91,3 +91,15 @@
   white-space: nowrap;
 }
 
+.logistics-filters {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.logistics-filters .form-label {
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+

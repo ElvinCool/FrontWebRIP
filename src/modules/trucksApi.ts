@@ -114,7 +114,12 @@ const normalizeLogisticItem = (item: any): LogisticItemData | null => {
     id: item.id ?? item.ID ?? item.Id ?? 0,
     logisticId: logisticId ?? 0,
     truckId: truckId ?? normalizedTruck.id,
-    count: toNumber(item.count ?? item.Count ?? item.CountLogistics) ?? 1,
+    // Маппим distance (километры) из API
+    distance: toNumber(item.distance ?? item.Distance) ?? undefined,
+    // Маппим count_logistics (количество машин) из API
+    countLogistics: toNumber(item.count_logistics ?? item.CountLogistics) ?? undefined,
+    // count для обратной совместимости (используется distance, если есть)
+    count: toNumber(item.distance ?? item.Distance ?? item.count ?? item.Count) ?? 250,
     price: toNumber(item.price ?? item.Price),
     comment: item.comment ?? item.Comment ?? "",
     truck: normalizedTruck,
@@ -166,17 +171,28 @@ export const normalizeLogistic = (payload: any): LogisticData | null => {
 };
 
 const fetchJson = async (input: RequestInfo, init?: RequestInit) => {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 секунд таймаут
+  
   try {
-    const response = await fetch(input, init);
+    const response = await fetch(input, {
+      ...init,
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
     if (!response.ok) {
       const text = await response.text();
       throw new Error(`HTTP ${response.status}: ${text}`);
     }
     return response.json();
   } catch (error) {
+    clearTimeout(timeoutId);
     // Обрабатываем сетевые ошибки (бэкенд недоступен, CORS, таймаут и т.д.)
     if (error instanceof TypeError && error.message.includes('fetch')) {
       throw new Error('Network error: Backend is not available');
+    }
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new Error('Request timeout: Backend took too long to respond');
     }
     throw error;
   }

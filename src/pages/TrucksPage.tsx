@@ -14,7 +14,7 @@ import { useCartItems, addTruckAction } from "../slices/cartSlice"
 import { addTruckToDraftAsync, getDraftLogisticAsync } from "../slices/logisticsSlice"
 import type { TruckData } from "../modules/getTruckById"
 
-const ITEMS_PER_PAGE = 3 // Количество грузовиков на странице (уменьшено для демонстрации пагинации)
+const ITEMS_PER_PAGE = 6 // Количество грузовиков на странице (уменьшено для демонстрации пагинации)
 
 const TrucksPage = () => {
   const dispatch = useDispatch<AppDispatch>()

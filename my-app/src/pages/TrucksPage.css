@@ -94,4 +94,25 @@
   .trucks-page-title {
     font-size: 1.8rem;
   }
+
+  .trucks-page-toolbar {
+    padding: 1rem 1rem 0;
+  }
+
+  .trucks-search-wrapper {
+    padding: 0.5rem;
+  }
+}
+
+/* Адаптивность для карточек грузовиков */
+@media (max-width: 992px) {
+  .trucks-grid {
+    /* На планшетах: 2 колонки */
+  }
+}
+
+@media (max-width: 768px) {
+  .trucks-grid {
+    /* На мобильных: 1 колонка */
+  }
 }

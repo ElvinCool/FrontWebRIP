@@ -78,3 +78,48 @@
   background-color: #357abd;
 }
 
+/* Адаптивность для карточек грузовиков */
+@media (max-width: 768px) {
+  .truck-card-content {
+    padding: 1.25rem;
+  }
+
+  .truck-card-model {
+    font-size: 1.1rem;
+  }
+
+  .truck-card-description {
+    font-size: 0.85rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .truck-card-image-container {
+    height: 180px;
+  }
+}
+
+@media (max-width: 576px) {
+  .truck-card-content {
+    padding: 1rem;
+  }
+
+  .truck-card-model {
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .truck-card-description {
+    font-size: 0.8rem;
+    margin-bottom: 1rem;
+  }
+
+  .truck-card-image-container {
+    height: 160px;
+  }
+
+  .truck-card-button {
+    padding: 0.65rem 1.25rem;
+    font-size: 0.9rem;
+  }
+}
+

@@ -76,3 +76,40 @@
   width: 100% !important;
   height: 100% !important;
 }
+
+/* Адаптивность для главной страницы */
+@media (max-width: 768px) {
+  .fullscreen-carousel-caption {
+    padding: 2rem 1.5rem !important;
+  }
+
+  .fullscreen-carousel-caption h1 {
+    font-size: 2.5rem !important;
+  }
+
+  .fullscreen-carousel-caption h3 {
+    font-size: 1.5rem !important;
+  }
+
+  .fullscreen-carousel-caption p {
+    font-size: 0.9rem !important;
+  }
+}
+
+@media (max-width: 576px) {
+  .fullscreen-carousel-caption {
+    padding: 1.5rem 1rem !important;
+  }
+
+  .fullscreen-carousel-caption h1 {
+    font-size: 2rem !important;
+  }
+
+  .fullscreen-carousel-caption h3 {
+    font-size: 1.25rem !important;
+  }
+
+  .fullscreen-carousel-caption p {
+    font-size: 0.85rem !important;
+  }
+}

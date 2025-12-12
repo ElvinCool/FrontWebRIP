@@ -1,4 +1,4 @@
-import { KeyboardEvent } from "react";
+import type { KeyboardEvent } from "react";
 import "./CartIndicator.css";
 import busketIcon from "../assets/busket.svg";
 

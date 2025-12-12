@@ -162,7 +162,52 @@
     padding: 1.25rem;
   }
 
+  .truck-det-stats {
+    grid-template-columns: 1fr;
+  }
+
   .truck-det-stat-card {
     padding: 0.9rem 1rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .truck-det-content {
+    padding: 1.5rem 0.75rem 2rem;
+  }
+
+  .truck-det-title {
+    font-size: 1.5rem;
+  }
+
+  .truck-det-subtitle {
+    font-size: 0.9rem;
+  }
+
+  .truck-det-text {
+    font-size: 0.85rem;
+  }
+
+  .truck-det-hero-image {
+    padding: 0.75rem;
+  }
+
+  .truck-det-description {
+    padding: 1rem;
+    border-width: 2px;
+  }
+
+  .truck-det-stats {
+    gap: 0.75rem;
+  }
+
+  .truck-det-stat-card {
+    padding: 0.85rem 0.9rem;
+  }
+
+  .truck-det-stat-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
   }
 }

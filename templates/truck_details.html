@@ -1,0 +1,43 @@
+<html lang="ru">
+<head>
+    <title>{{ .truck.Title }} — LogiTruck</title>
+    <link rel="stylesheet" href="/styles/truck_details_style.css">
+</head>
+<body>
+<header>
+    <h1 class="header">
+        <a href="/trucks"><img src="/img/logo.svg" alt="home"></a>
+    </h1>
+</header>
+
+<main>
+    <!-- картинка -->
+    <img src="{{ .truck.ImgURL }}" alt="{{ .truck.Title }}" width="480" height="320" class="truck-picture">
+
+    <!-- карточка -->
+    <div class="truck-card">
+        <h2 class="main-text">{{ .truck.Title }}</h2>
+        <p class="truck-card-description">{{ .truck.Description }}</p>
+    </div>
+
+    <!-- подробности -->
+    <div class="more-card">
+        <h2 class="more-main-text">Подробнее</h2>
+        <ul class="more-card-list">
+            <li class="more-card-list-item">
+                📦 Грузоподъёмность: {{ .truck.Weight }} кг
+            </li>
+            <li class="more-card-list-item">
+                💰 Стоимость: {{ .truck.Price }} ₽/км
+            </li>
+            <li class="more-card-list-item">
+                🚛 Размеры: {{ .truck.Length }} × {{ .truck.Width }} × {{ .truck.Height }} м
+            </li>
+            <li class="more-card-list-item">
+                🗓️ Год выпуска: {{ .truck.Year }}
+            </li>
+        </ul>
+    </div>
+</main>
+</body>
+</html>

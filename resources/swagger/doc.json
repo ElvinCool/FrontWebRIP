@@ -1,0 +1,95 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "WebRIP API",
+    "version": "1.0.0"
+  },
+  "paths": {
+    
+    
+    "/api/users/register": {
+      "post": {
+        "summary": "Register",
+        "tags": ["Users"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {"$ref": "#/components/schemas/UserCredentials"},
+              "example": {"login": "user1", "password": "pass"}
+            }
+          }
+        },
+        "responses": {"201": {"description": "created"}, "400": {"description": "bad request"}}
+      }
+    },
+    "/api/users/login": {
+      "post": {
+        "summary": "Login",
+        "tags": ["Users"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {"$ref": "#/components/schemas/UserCredentials"},
+              "example": {"login": "user1", "password": "pass"}
+            }
+          }
+        },
+        "responses": {"200": {"description": "ok"}, "401": {"description": "unauthorized"}, "400": {"description": "bad request"}}
+      }
+    },
+    "/api/users/logout": {"post": {"summary": "Logout", "tags": ["Users"], "responses": {"200": {"description": "ok"}}}},
+    "/api/users/me": {"get": {"summary": "Me", "tags": ["Users"], "security": [{"cookieAuth":[]}], "responses": {"200": {"description": "ok"}, "401": {"description": "unauthorized"}}}},
+
+    "/api/trucks": {"get": {"summary": "List trucks (public)", "tags": ["Trucks"], "responses": {"200": {"description": "ok"}}}},
+    "/api/truck": {"post": {"summary": "Create truck (moderator)", "tags": ["Trucks"], "security": [{"cookieAuth":[]}], "responses": {"201": {"description": "created"}, "403": {"description": "forbidden"}}}},
+    "/api/truck/{id}": {
+      "get": {"summary": "Get truck by id (public)", "tags": ["Trucks"], "parameters": [{"name":"id","in":"path","required":true,"schema":{"type":"integer"}}], "responses": {"200": {"description": "ok"}}},
+      "put": {"summary": "Update truck (moderator)", "tags": ["Trucks"], "security": [{"cookieAuth":[]}], "parameters": [{"name":"id","in":"path","required":true,"schema":{"type":"integer"}}], "responses": {"200": {"description": "ok"}, "403": {"description": "forbidden"}}},
+      "delete": {"summary": "Delete truck (moderator)", "tags": ["Trucks"], "security": [{"cookieAuth":[]}], "parameters": [{"name":"id","in":"path","required":true,"schema":{"type":"integer"}}], "responses": {"200": {"description": "ok"}, "403": {"description": "forbidden"}}}
+    },
+    "/api/trucks/{id}/image": {"post": {"summary": "Upload truck image (moderator)", "tags": ["Trucks"], "security": [{"cookieAuth":[]}], "parameters": [{"name":"id","in":"path","required":true,"schema":{"type":"integer"}}], "responses": {"200": {"description": "ok"}, "403": {"description": "forbidden"}}}},
+
+    "/api/logistic/draft": {"get": {"summary": "Get current user's draft", "tags": ["Logistics"], "security": [{"cookieAuth":[]}], "responses": {"200": {"description": "ok"}, "401": {"description": "unauthorized"}}}},
+    "/api/logistics/draft/add/{id}": {"post": {"summary": "Add truck to draft (user)", "tags": ["Logistics"], "security": [{"cookieAuth":[]}], "parameters": [{"name":"id","in":"path","required":true,"schema":{"type":"integer"}}], "responses": {"200": {"description": "ok"}, "401": {"description": "unauthorized"}}}},
+    "/api/logistics": {"get": {"summary": "List logistics (auth: creator only; moderator all)", "tags": ["Logistics"], "security": [{"cookieAuth":[]}], "responses": {"200": {"description": "ok"}, "401": {"description": "unauthorized"}}}},
+    "/api/logistics/{id}": {"get": {"summary": "Get logistic by id (auth)", "tags": ["Logistics"], "security": [{"cookieAuth":[]}], "parameters": [{"name":"id","in":"path","required":true,"schema":{"type":"integer"}}], "responses": {"200": {"description": "ok"}, "401": {"description": "unauthorized"}}},
+                           "put": {"summary": "Update logistic (moderator)", "tags": ["Logistics"], "security": [{"cookieAuth":[]}], "parameters": [{"name":"id","in":"path","required":true,"schema":{"type":"integer"}}], "responses": {"200": {"description": "ok"}, "403": {"description": "forbidden"}}},
+                           "delete": {"summary": "Soft delete logistic (moderator)", "tags": ["Logistics"], "security": [{"cookieAuth":[]}], "parameters": [{"name":"id","in":"path","required":true,"schema":{"type":"integer"}}], "responses": {"200": {"description": "ok"}, "403": {"description": "forbidden"}}}},
+    "/api/logistics/{id}/save": {"put": {"summary": "Save logistic (user: change status to 'сформирован')", "tags": ["Logistics"], "security": [{"cookieAuth":[]}], "parameters": [{"name":"id","in":"path","required":true,"schema":{"type":"integer"}}], "responses": {"200": {"description": "ok"}, "401": {"description": "unauthorized"}, "403": {"description": "forbidden"}}}},
+    "/api/logistics/{id}/finalize": {"put": {"summary": "Finalize/complete (moderator)", "tags": ["Logistics"], "security": [{"cookieAuth":[]}], "parameters": [{"name":"id","in":"path","required":true,"schema":{"type":"integer"}}], "responses": {"200": {"description": "ok"}, "403": {"description": "forbidden"}}}},
+    "/api/logistics/{id}/close": {"put": {"summary": "Close/Reject (moderator)", "tags": ["Logistics"], "security": [{"cookieAuth":[]}], "parameters": [{"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}], "responses": {"200": {"description": "ok"}, "403": {"description": "forbidden"}}}},
+
+    "/api/logistic-truck/{logistic_id}/{truck_id}": {"put": {"summary": "Update logistic-truck (moderator)", "tags": ["Logistic-Trucks"], "security": [{"cookieAuth":[]}], "parameters": [{"name":"logistic_id","in":"path","required":true,"schema":{"type":"integer"}}, {"name":"truck_id","in":"path","required":true,"schema":{"type":"integer"}}], "responses": {"200": {"description": "ok"}, "403": {"description": "forbidden"}}},
+                                                "delete": {"summary": "Delete logistic-truck (moderator)", "tags": ["Logistic-Trucks"], "security": [{"cookieAuth":[]}], "parameters": [{"name":"logistic_id","in":"path","required":true,"schema":{"type":"integer"}}, {"name":"truck_id","in":"path","required":true,"schema":{"type":"integer"}}], "responses": {"200": {"description": "ok"}, "403": {"description": "forbidden"}}}}
+  },
+  "components": {
+    "schemas": {
+      "UserCredentials": {
+        "type": "object",
+        "required": ["login", "password"],
+        "properties": {
+          "login": {"type": "string"},
+          "password": {"type": "string"}
+        }
+      }
+    },
+    "securitySchemes": {
+      "cookieAuth": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "sid",
+        "description": "Cookie-based авторизация. После логина cookie 'sid' устанавливается автоматически и используется во всех запросах."
+      },
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT токен из ответа /api/users/login (опционально, если реализован JWT)"
+      }
+    }
+  }
+}
+
+

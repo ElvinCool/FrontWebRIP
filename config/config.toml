@@ -1,0 +1,6 @@
+ServiceHost = "0.0.0.0"
+ServicePort = 8080
+RedisAddr = "localhost:6379"
+RedisPassword = ""
+RedisDB = 0
+JWTSecret = "your-secret-key-change-in-production"

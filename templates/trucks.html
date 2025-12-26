@@ -1,0 +1,49 @@
+<html lang="en" xmlns="http://www.w3.org/1999/html">
+<head>
+    <title>LogiTruck</title>
+    <link rel="stylesheet" href="/styles/trucks_style.css">
+</head>
+<body>
+<header>
+    <h1>
+        <a href="/trucks"><img src="/img/logo.svg" alt="trucks"></a>
+    </h1>
+</header>
+<main>
+    <a href="/logistic/{{ .draft_id }}" class="busket-logistic" title="Перейти в Логистику">
+        <img src="/img/busket.svg" alt="Логистики" width="48" height="48">
+        {{ if ne .logistic_count 0 }}
+        <span class="logistic-badge">{{ .logistic_count }}</span>
+        {{ end }}
+    </a>
+    <div class="description">
+        <h2 class="main-text">
+            Наш автопарк грузовиков
+        </h2>
+        <p class="description-text">Выбирайте из нашего ассортимента транспортных <br>средств ваших задач по доставке</p>
+    </div>
+    <div class="search">
+        <form action="/trucks" method="GET">
+            <input class="search-field" type="text" name="query" placeholder="Поиск грузовиков" value="{{ .query }}">
+            <!-- value="{{ .query }}"  нужно для того, чтобы из обработчика передавать
+            введенный запрос обратно на страницу. Тем самым введенный текст в поле поиска будет сохраняться-->
+
+            <button type="submit" class="search-button">Найти</button>
+        </form>
+    </div>
+    <ul class="cards">
+        {{ range .trucks }}
+        <li class="cards-form">
+            <img src="{{ .ImgURL }}" width="359px" height="239px" alt="{{ .ID }}">
+            <a class="card-title" href="/truck/{{ .ID }}"> {{ .Title }} </a>
+            <p class="card-preview">{{ .Preview }}</p>
+            <form action="/truck/{{ .ID }}/add" method="POST">
+                <button class="card-but">Оставить заявку</button>
+            </form>
+        </li>
+        {{ end }}
+    </ul>
+</main>
+</body>
+
+</html>

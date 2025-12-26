@@ -1,0 +1,106 @@
+version: '3.7'
+
+# Общие настройки MinIO
+x-minio-common: &minio-common
+  image: quay.io/minio/minio:RELEASE.2022-10-15T19-57-03Z
+  command: server --console-address ":9001" http://minio{1...4}/data{1...2}
+  environment:
+    MINIO_ACCESS_KEY: minio
+    MINIO_SECRET_KEY: minio124
+  expose:
+    - "9000"
+    - "9001"
+  healthcheck:
+    test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+    interval: 30s
+    timeout: 20s
+    retries: 3
+
+services:
+  # --- MinIO cluster ---
+  minio1:
+    <<: *minio-common
+    hostname: minio1
+    volumes:
+      - data1-1:/data1
+      - data1-2:/data2
+
+  minio2:
+    <<: *minio-common
+    hostname: minio2
+    volumes:
+      - data2-1:/data1
+      - data2-2:/data2
+
+  minio3:
+    <<: *minio-common
+    hostname: minio3
+    volumes:
+      - data3-1:/data1
+      - data3-2:/data2
+
+  minio4:
+    <<: *minio-common
+    hostname: minio4
+    volumes:
+      - data4-1:/data1
+      - data4-2:/data2
+
+  nginx:
+    image: nginx:1.19.2-alpine
+    hostname: nginx
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    depends_on:
+      - minio1
+      - minio2
+      - minio3
+      - minio4
+
+  # --- PostgreSQL ---
+  postgres:
+    image: postgres:16
+    container_name: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: sql123
+      POSTGRES_DB: logitruck
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U myuser"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # --- Adminer ---
+  adminer:
+    image: adminer:latest
+    container_name: adminer
+    ports:
+      - "8081:8080"
+    depends_on:
+      - postgres
+
+  # --- Redis ---
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+
+volumes:
+  data1-1:
+  data1-2:
+  data2-1:
+  data2-2:
+  data3-1:
+  data3-2:
+  data4-1:
+  data4-2:
+  postgres_data:

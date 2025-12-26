@@ -1,0 +1,43 @@
+# Исключаем асинхронный сервис и фронтенд
+async_service_dir/
+FrontWebRIP/
+WebRIP_temp/
+async_service_env/
+
+# Скомпилированные бинарники (только в корне)
+/main$
+/RIP$
+/RIP_new$
+/redis-inspect$
+/tauri$
+/vite$
+/my-app@0.0.0$
+
+# Node modules
+node_modules/
+
+# Build outputs
+dist/
+dev-dist/
+target/
+
+# Базы данных
+*.sqlite3
+*.db
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+

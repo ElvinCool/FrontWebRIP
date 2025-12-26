@@ -1,0 +1,188 @@
+header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #0D66DD;
+    height: 64px;          /* фиксированная высота */
+    padding: 0 32px;       /* горизонтальные отступы */
+    box-sizing: border-box;
+}
+
+header img {
+    cursor: pointer;
+    height: 32px;           /* фиксированная высота логотипа */
+    width: auto;
+}
+
+body{
+    margin: 0;
+    padding: 0;
+    background-color: #E5E7EB;
+    font-family: 'Inter', sans-serif;
+    color: #111827;
+    margin: 0;
+    padding: 0;
+    align-self: center;
+}
+
+
+/* === Заголовки === */
+.page-header {
+    margin: 40px 40px 0 40px;
+}
+.main-title {
+    font-size: 36px;
+    font-weight: 700;
+    margin: 0;
+}
+.main-subtitle {
+    font-size: 20px;
+    font-weight: 500;
+    color: #6B7280;
+    margin-top: 16px;
+    margin-bottom: 25px;
+}
+
+/* === Карточка грузовика === */
+.truck-card {
+    margin-top: 25px;
+}
+
+/* === Строка грузов === */
+.truck-row {
+    display: flex;
+    justify-content: space-between; /* разделяем левую и правую часть */
+    align-items: center;
+    background: #fff;
+    padding: 14px 20px;
+    margin: 10px 40px;
+    border-radius: 12px;
+    font-size: 14px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    flex-wrap: nowrap; /* все элементы в одну линию */
+    overflow-x: hidden; /* без горизонтальной прокрутки */
+}
+
+/* Левая часть */
+.truck-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-shrink: 0;
+}
+.truck-image {
+    width: 120px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+.truck-title {
+    font-size: 18px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+/* Правая часть */
+.truck-right {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 16px;
+    flex-wrap: nowrap;
+    text-align: right;
+    flex: 1;
+}
+
+.truck-params-inline {
+    font-weight: 500;
+    opacity: 0.8;
+    max-width: none;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
+.truck-inputs-inline {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+.truck-inputs-inline input {
+    width: 70px;
+    height: 32px;
+    border: 1px solid #D1D5DB;
+    border-radius: 6px;
+    padding: 0 6px;
+}
+
+.calc-btn {
+    padding: 6px 12px;
+    background: #0D66DD;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background 0.2s ease;
+    flex-shrink: 0;
+}
+.calc-btn:hover {
+    background: #0953b4;
+}
+
+.truck-result-inline {
+    font-weight: 600;
+    line-height: 1.4;
+    white-space: nowrap;
+}
+
+.delete-small {
+    background: transparent;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 4px;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+/* === Кнопка удаления заявки === */
+.delete-block {
+    text-align: end;
+    margin-right: 40px;
+    margin-top: 20px;
+}
+.delete-btn {
+    background: #0D66DD;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 20px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+.delete-btn:hover {
+    background: #0953b4;
+}
+
+/* === Адаптивность === */
+@media (max-width: 1100px) {
+    .truck-params-inline {
+        max-width: 260px;
+    }
+}
+@media (max-width: 900px) {
+    .truck-row {
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+    .truck-right {
+        justify-content: flex-start;
+        flex-wrap: wrap;
+        gap: 8px;
+        text-align: left;
+    }
+}

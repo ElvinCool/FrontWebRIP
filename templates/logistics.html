@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>LogiTruck</title>
+    <link rel="stylesheet" href="/styles/logistics_style.css">
+</head>
+<body>
+
+<header class="header">
+    <h1>
+        <a href="/trucks"><img src="/img/logo.svg" alt="trucks"></a>
+    </h1>
+</header>
+
+<main>
+    <div class="page-header">
+        <h1 class="main-title">Заявка на логистику № {{ .logistic.ID }}</h1>
+        <p class="main-subtitle">Управляйте своими операциями по логистике</p>
+    </div>
+
+    {{ range .logistic.LogisticTrucks }}
+    <div class="truck-card">
+        <div class="truck-row">
+            <div class="truck-left">
+                <img src="{{ .Truck.ImgURL }}" alt="{{ .Truck.Title }}" class="truck-image">
+                <h2 class="truck-title">{{ .Truck.Title }}</h2>
+            </div>
+
+            <div class="truck-right">
+                <div class="truck-params-inline">
+                    Размеры (Д×Ш×В): {{ .Truck.Length }} × {{ .Truck.Width }} × {{ .Truck.Height }} м •
+                    Г/П: {{ .Truck.Weight }} кг • Стоим: {{ .Truck.Price }}₽/км
+                </div>
+
+                <div class="truck-inputs-inline">
+                    <label for="weight">Вес</label>
+                    <input id="weight" type="text" value="1000">
+                    <label for="distance">Км</label>
+                    <input id="distance" type="text" value="250">
+                </div>
+
+                <button class="calc-btn">Рассчитать</button>
+                <div>
+                    <b>Итого:</b> {{ .Price}} <b>Машин:</b> {{ .CountLogistics}}
+                </div>
+            </div>
+        </div>
+    </div>
+    {{ end }}
+
+    <div class="delete-block">
+        <form action="/logistic/{{ .logistic.ID }}/delete" method="POST">
+            <button type="submit" class="delete-btn">Удалить заявку</button>
+        </form>
+    </div>
+</main>
+
+</body>
+</html>

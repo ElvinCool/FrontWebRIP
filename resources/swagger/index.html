@@ -1,0 +1,38 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>WebRIP API Docs</title>
+    <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css" />
+    <style>body { margin: 0; } #swagger-ui { height: 100vh; }</style>
+  </head>
+  <body>
+    <div id="swagger-ui"></div>
+    <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+    <script>
+      window.onload = () => {
+        window.ui = SwaggerUIBundle({
+          url: './doc.json',
+          dom_id: '#swagger-ui',
+          deepLinking: true,
+          persistAuthorization: true, // Сохранять авторизацию между перезагрузками
+          // Включить поддержку cookie для всех запросов
+          requestInterceptor: (request) => {
+            // Swagger UI автоматически управляет cookie через браузер
+            // Cookie будет автоматически отправляться с каждым запросом
+            return request;
+          },
+          // Настройки для отображения заголовков
+          tryItOutEnabled: true, // Включить "Try it out" по умолчанию
+          supportedSubmitMethods: ['get', 'post', 'put', 'delete', 'patch'],
+          // Показывать заголовки в запросах
+          displayRequestDuration: true,
+          // Включить отображение cookie в запросах
+          withCredentials: true,
+        });
+      };
+    </script>
+  </body>
+  </html>
+
+

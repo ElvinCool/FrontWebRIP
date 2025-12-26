@@ -148,7 +148,7 @@ export const updateLogisticTruckAsync = createAsyncThunk(
 // Сохранение заявки пользователем (статус -> "сформирован")
 export const saveLogisticAsync = createAsyncThunk(
   'logistics/saveLogisticAsync',
-  async ({ id, logisticTrucks }: { id: number; logisticTrucks?: Array<{ truck_id: number; distance: number }> }, { rejectWithValue, dispatch }) => {
+  async ({ id, logisticTrucks }: { id: number; logisticTrucks?: Array<{ truck_id: number; distance: number; count_logistics?: number }> }, { rejectWithValue, dispatch }) => {
     try {
       // Если переданы данные для обновления LogisticTrucks, отправляем их
       if (logisticTrucks && logisticTrucks.length > 0) {
@@ -312,16 +312,27 @@ const logisticsSlice = createSlice({
           // Нормализуем каждую заявку
           const logistics = Array.isArray(payload) ? payload : (payload.logistics || []);
           state.logisticsList = logistics.map((log: any) => {
+            // Логируем первую заявку для отладки
+            if (log.id && !log.creator && !log.Creator) {
+              console.log('Raw log data (no creator):', log);
+            }
+            
             // Нормализуем данные заявки
             const normalized = normalizeLogistic(log);
+            const creator = log.creator || log.Creator;
+            
             if (normalized) {
               return {
                 ...normalized,
-                creator: log.creator || log.Creator,
+                creator: creator,
                 moderator: log.moderator || log.Moderator,
-                date_create: log.date_create || log.dateCreate,
+                date_create: log.date_create || log.dateCreate || log.created_at,
                 date_update: log.date_update || log.dateUpdate,
-                date_finish: log.date_finish || log.dateFinish,
+                date_finish: log.date_finish || log.dateFinish || log.closed_at,
+                created_at: log.created_at || log.date_create || log.dateCreate,
+                formed_at: log.formed_at || log.date_update || log.dateUpdate,
+                closed_at: log.closed_at || log.date_finish || log.dateFinish,
+                total_price: log.total_price || log.totalPrice || 0,
               };
             }
             return {
@@ -329,8 +340,15 @@ const logisticsSlice = createSlice({
               status: log.status || 'draft',
               items: log.logistic_trucks || log.items || [],
               isMock: false,
-              creator: log.creator || log.Creator,
+              creator: creator,
               moderator: log.moderator || log.Moderator,
+              date_create: log.date_create || log.dateCreate || log.created_at,
+              date_update: log.date_update || log.dateUpdate,
+              date_finish: log.date_finish || log.dateFinish || log.closed_at,
+              created_at: log.created_at || log.date_create || log.dateCreate,
+              formed_at: log.formed_at || log.date_update || log.dateUpdate,
+              closed_at: log.closed_at || log.date_finish || log.dateFinish,
+              total_price: log.total_price || log.totalPrice || 0,
             };
           });
         }

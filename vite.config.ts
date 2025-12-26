@@ -1,7 +1,17 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
-import { dest_root, api_proxy_addr, img_proxy_addr } from './src/target_config'
+
+// Импортируем конфигурацию напрямую, чтобы избежать циклических зависимостей
+// Используем статические значения для vite.config, чтобы избежать постоянных перезапусков
+const target_tauri = false
+const USE_IP = false
+const SERVER_IP = "192.168.1.94"
+const api_host = USE_IP ? SERVER_IP : "localhost"
+const img_host = USE_IP ? SERVER_IP : "localhost"
+const api_proxy_addr = `http://${api_host}:8080`
+const img_proxy_addr = `http://${img_host}:9000`
+const dest_root = target_tauri ? "" : ""
 
 // Отключаем PWA для Tauri (не нужен для десктопного приложения)
 // PWA отключается как в build, так и в dev режиме Tauri
@@ -19,6 +29,15 @@ export default defineConfig({
   base: dest_root,
   server: {
     port: 3000,
+    watch: {
+      // Игнорируем изменения в конфигурационных файлах, чтобы избежать постоянных перезапусков
+      ignored: [
+        '**/tsconfig.json',
+        '**/tsconfig.*.json',
+        '**/node_modules/**',
+        '**/.git/**',
+      ],
+    },
     proxy: {
       '/api': {
         target: api_proxy_addr,

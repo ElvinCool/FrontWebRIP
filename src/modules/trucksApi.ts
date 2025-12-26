@@ -301,10 +301,8 @@ export const fetchDraftLogistic = async (): Promise<LogisticData | null> => {
 
 export const removeTruckFromCart = async (logisticId: number, truckId: number) => {
   try {
-    await fetchJson(`${API_BASE}/logistic-truck/${logisticId}/${truckId}`, {
-      method: "DELETE",
-      credentials: "include",
-    });
+    // Используем сгенерированный API, который автоматически добавляет JWT токен
+    await api.logisticTruck.logisticTruckDelete({ logisticId, truckId });
     return true;
   } catch (error) {
     console.warn(`removeTruckFromCart(${logisticId}, ${truckId}): fallback to mock store`, error);
@@ -315,10 +313,8 @@ export const removeTruckFromCart = async (logisticId: number, truckId: number) =
 
 export const deleteDraftLogistic = async (logisticId: number) => {
   try {
-    await fetchJson(`${API_BASE}/logistics/${logisticId}`, {
-      method: "DELETE",
-      credentials: "include",
-    });
+    // Используем сгенерированный API, который автоматически добавляет JWT токен
+    await api.logistics.logisticsDelete({ id: logisticId });
     return true;
   } catch (error) {
     console.warn(`deleteDraftLogistic(${logisticId}): fallback to mock store`, error);

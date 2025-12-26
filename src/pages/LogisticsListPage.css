@@ -5,13 +5,15 @@
 
 .logistics-list-container {
   padding: 2rem;
-  max-width: 1200px;
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
 .logistics-list-title {
   margin-bottom: 2rem;
   color: #333;
   font-weight: 600;
+  font-size: 2rem;
 }
 
 .logistics-list-loading {
@@ -23,27 +25,179 @@
   gap: 1rem;
 }
 
-.logistics-table {
+/* Фильтры - белая карточка */
+.logistics-filters-card {
   background: white;
-  border-radius: 8px;
-  overflow: hidden;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.logistics-table-row {
+.logistics-filters-content {
+  display: flex;
+  align-items: flex-end;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.logistics-filter-item {
+  flex: 1;
+  min-width: 180px;
+  margin-bottom: 0;
+}
+
+.logistics-filter-item .form-label {
+  font-weight: 500;
+  margin-bottom: 8px;
+  color: #333;
+  font-size: 0.9rem;
+}
+
+.logistics-filter-select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  background-color: white;
   cursor: pointer;
+}
+
+.logistics-filter-select:focus {
+  border-color: #3f7bff;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(63, 123, 255, 0.1);
+}
+
+.logistics-filter-date-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.logistics-filter-date {
+  width: 100%;
+  padding: 10px 40px 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 0.95rem;
+}
+
+.logistics-filter-date:focus {
+  border-color: #3f7bff;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(63, 123, 255, 0.1);
+}
+
+.logistics-filter-date-icon {
+  position: absolute;
+  right: 12px;
+  pointer-events: none;
+  font-size: 1.1rem;
+}
+
+.logistics-filter-apply-btn {
+  padding: 10px 24px;
+  background-color: #3f7bff;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-weight: 500;
+  font-size: 0.95rem;
+  cursor: pointer;
+  white-space: nowrap;
   transition: background-color 0.2s;
 }
 
-.logistics-table-row:hover {
+.logistics-filter-apply-btn:hover {
+  background-color: #3470f5;
+}
+
+.logistics-filter-apply-btn:active {
+  background-color: #2d5fd4;
+}
+
+/* Таблица */
+.logistics-table {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.logistics-table thead {
   background-color: #f8f9fa;
 }
 
+.logistics-table thead th {
+  padding: 16px;
+  text-align: left;
+  font-weight: 600;
+  color: #333;
+  font-size: 0.9rem;
+  border-bottom: 2px solid #e9ecef;
+  white-space: nowrap;
+}
+
+.logistics-table tbody tr {
+  border-bottom: 1px solid #e9ecef;
+  transition: background-color 0.2s;
+}
+
+.logistics-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.logistics-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.logistics-table tbody td {
+  padding: 16px;
+  color: #333;
+  font-size: 0.95rem;
+  vertical-align: middle;
+}
+
+.logistics-table-id {
+  font-weight: 600;
+  color: #3f7bff;
+}
+
+.logistics-table-price {
+  text-align: right;
+  font-weight: 500;
+}
+
+.logistics-table-date {
+  color: #666;
+}
+
+.logistics-table-creator {
+  color: #333;
+  font-weight: 500;
+}
+
+.logistics-table-actions {
+  text-align: center;
+}
+
+/* Статусы - цветные бейджи */
 .status-badge {
-  padding: 0.25rem 0.75rem;
-  border-radius: 12px;
-  font-size: 0.875rem;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
   font-weight: 500;
   display: inline-block;
+  text-transform: lowercase;
+}
+
+.status-badge::first-letter {
+  text-transform: uppercase;
 }
 
 .status-draft {
@@ -66,40 +220,77 @@
   color: #721c24;
 }
 
-.btn-view-logistic {
-  background-color: #3f7bff;
-  color: white;
+/* Кнопка просмотра */
+.logistics-view-btn {
+  color: #3f7bff;
+  text-decoration: none;
+  padding: 0;
+  font-weight: 500;
+  font-size: 0.95rem;
   border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
+  background: none;
   cursor: pointer;
-  font-weight: 500;
-  transition: background-color 0.2s;
+  transition: color 0.2s;
 }
 
-.btn-view-logistic:hover {
-  background-color: #3470f5;
+.logistics-view-btn:hover {
+  color: #3470f5;
+  text-decoration: underline;
 }
 
-.logistics-actions-group {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
+.logistics-view-btn:focus {
+  box-shadow: none;
+  outline: none;
 }
 
-.logistics-actions-group .btn {
-  white-space: nowrap;
+/* Адаптивность */
+@media (max-width: 1200px) {
+  .logistics-filters-content {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .logistics-filter-item {
+    min-width: 100%;
+  }
+
+  .logistics-filter-apply-btn {
+    width: 100%;
+  }
+
+  .logistics-table {
+    font-size: 0.85rem;
+  }
+
+  .logistics-table thead th,
+  .logistics-table tbody td {
+    padding: 12px 8px;
+  }
 }
 
-.logistics-filters {
-  background: #f8f9fa;
-  padding: 20px;
-  border-radius: 8px;
-  margin-bottom: 20px;
-}
+@media (max-width: 768px) {
+  .logistics-list-container {
+    padding: 1rem;
+  }
 
-.logistics-filters .form-label {
-  font-weight: 500;
-  margin-bottom: 8px;
-}
+  .logistics-list-title {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
 
+  .logistics-filters-card {
+    padding: 16px;
+  }
+
+  .logistics-table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .logistics-table thead th,
+  .logistics-table tbody td {
+    padding: 10px 6px;
+    font-size: 0.8rem;
+  }
+}

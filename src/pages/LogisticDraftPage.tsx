@@ -10,7 +10,6 @@ import {
   removeTruckFromLogisticAsync,
   deleteLogisticAsync,
   saveLogisticAsync,
-  updateLogisticTruckAsync,
   clearError,
 } from "../slices/logisticsSlice";
 import { useCart, removeTruckAction, resetAction } from "../slices/cartSlice";
@@ -23,13 +22,21 @@ import { ROUTES } from "../../Routes";
 interface CalculationState {
   weight: number;
   distance: number;
+  length?: number;
+  width?: number;
+  height?: number;
 }
 
 const defaultCalculationState = (item: LogisticItemData): CalculationState => ({
-  weight: item.truck.weight ?? 1000,
+  // Вес груза по умолчанию 0, а не грузоподъемность грузовика
+  // Грузоподъемность - это характеристика грузовика, а не вес груза
+  weight: 0,
   // Используем count из item (который содержит Distance из БД), если он есть и > 0
   // Иначе используем значение по умолчанию 250
   distance: (item.count && item.count > 0) ? item.count : 250,
+  length: item.truck.length ?? undefined,
+  width: item.truck.width ?? undefined,
+  height: item.truck.height ?? undefined,
 });
 
 const LogisticDraftPage = () => {
@@ -47,6 +54,8 @@ const LogisticDraftPage = () => {
   
   const [calculations, setCalculations] = useState<Record<number, CalculationState>>({});
   const [inputValues, setInputValues] = useState<Record<number, CalculationState>>({});
+  const [initialBudget, setInitialBudget] = useState<number>(0);
+  const [remainingBudget, setRemainingBudget] = useState<number | null>(null);
 
   // Load logistic data
   useEffect(() => {
@@ -178,6 +187,15 @@ const LogisticDraftPage = () => {
     );
   }, [computedItems]);
 
+  // Вычисляем остаточный бюджет
+  useEffect(() => {
+    if (initialBudget > 0) {
+      setRemainingBudget(initialBudget - totalSummary.amount);
+    } else {
+      setRemainingBudget(null);
+    }
+  }, [initialBudget, totalSummary.amount]);
+
   const handleChange = (truckId: number, field: keyof CalculationState, value: number) => {
     setInputValues((prev) => ({
       ...prev,
@@ -264,40 +282,51 @@ const LogisticDraftPage = () => {
     if (!logistic || !isAuthenticated || !currentLogistic) return;
     
     try {
-      // Подготавливаем данные для обновления Distance (километры) из значений distance
+      // Подготавливаем данные для обновления Distance (километры) и CountLogistics (количество машин)
       // ВАЖНО: используем inputValues, а не calculations, потому что inputValues содержит то, что ввел пользователь
-      const logisticTrucks: Array<{ truck_id: number; distance: number }> = [];
+      const logisticTrucks: Array<{ truck_id: number; distance: number; count_logistics?: number }> = [];
       
       if (logistic.items && logistic.items.length > 0) {
         logistic.items.forEach((item) => {
           // Используем inputValues - это то, что пользователь ввел в поля
           const inputState = inputValues[item.truckId];
           const distance = inputState?.distance ?? 0;
+          const weight = inputState?.weight ?? 0;
           
-          console.log(`Saving distance for truck ${item.truckId}: inputState=`, inputState, `distance=`, distance);
+          // Вычисляем количество машин на основе веса груза
+          const capacity = item.truck.weight ?? 0;
+          const trucksByWeight = capacity > 0 ? Math.ceil(weight / capacity) : 1;
+          const countLogistics = Math.max(1, trucksByWeight);
+          
+          console.log(`Saving for truck ${item.truckId}: weight=${weight}, distance=${distance}, count_logistics=${countLogistics}`);
           
           // Если distance > 0, добавляем в список для обновления
           if (distance > 0) {
             logisticTrucks.push({
               truck_id: item.truckId,
               distance: distance, // Сохраняем distance (километры)
+              count_logistics: countLogistics, // Сохраняем количество машин
             });
           }
         });
       }
       
-      console.log('Saving logistic with Distance:', logisticTrucks);
+      console.log('Saving logistic with updates:', logisticTrucks);
       
-      // Сохраняем заявку с обновлением Distance
+      // Сохраняем заявку с обновлением Distance и CountLogistics
       await dispatch(saveLogisticAsync({ 
         id: logistic.id, 
         logisticTrucks: logisticTrucks.length > 0 ? logisticTrucks : undefined 
       })).unwrap();
       
+      // Ждем немного, чтобы данные успели обновиться на бэкенде
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
       // После сохранения переходим к списку заявок
       navigate(ROUTES.LOGISTICS_LIST);
     } catch (error) {
       console.error("Ошибка при сохранении заявки:", error);
+      alert("Ошибка при сохранении заявки. Проверьте консоль для деталей.");
     }
   };
 
@@ -345,17 +374,60 @@ const LogisticDraftPage = () => {
           <Button variant="link" className="logistic-back" onClick={handleBackToList}>
             ← {isAuthenticated ? "Вернуться к списку заявок" : "Вернуться к списку грузовиков"}
           </Button>
-          <h1 className="logistic-title">
-            {logistic ? `Заявка на логистику № ${logistic.id}` : "Черновая заявка"}
-          </h1>
-          <p className="logistic-subtitle">
-            {isDraft ? "Управляйте своими операциями по логистике" : "Просмотр заявки"}
-          </p>
+          <div className="logistic-title-section">
+            <h1 className="logistic-title">
+              {logistic ? `Заявка на логистику № ${logistic.id}` : "Черновая заявка"}
+            </h1>
+            {isDraft && (
+              <span className="logistic-draft-badge">черновик</span>
+            )}
+          </div>
         </div>
 
         {logistic && (
-          <div className="logistic-content">
-            <div className="logistic-main">
+          <>
+            {/* Секция с полями ввода (аналог начального/остаточного заряда) */}
+            {isDraft && (
+              <div className="logistic-inputs-section">
+                <div className="logistic-inputs-row">
+                  <div className="logistic-input-field">
+                    <Form.Label>Начальный бюджет (₽)</Form.Label>
+                    <Form.Control
+                      type="number"
+                      value={initialBudget}
+                      min={0}
+                      onChange={(event) => setInitialBudget(parseFloat(event.target.value) || 0)}
+                      placeholder="0"
+                    />
+                  </div>
+                  <div className="logistic-input-field">
+                    <Form.Label>Остаток бюджета (₽)</Form.Label>
+                    <Form.Control
+                      type="text"
+                      value={remainingBudget !== null ? remainingBudget.toLocaleString("ru-RU", { maximumFractionDigits: 2 }) : "—"}
+                      disabled
+                      readOnly
+                    />
+                  </div>
+                </div>
+                <div className="logistic-actions-row">
+                  <Button variant="primary" onClick={handleSave} disabled={!logistic || logistic.items.length === 0}>
+                    Сохранить изменения
+                  </Button>
+                  <Button variant="success" onClick={handleSave} disabled={!logistic || logistic.items.length === 0}>
+                    Сформировать заявку
+                  </Button>
+                  <Button variant="danger" onClick={handleReset}>
+                    Удалить заявку
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Секция со сценариями (грузовиками) */}
+            <div className="logistic-scenarios-section">
+              <h2 className="logistic-scenarios-title">Грузовики в заявке</h2>
+              
               {computedItems.length === 0 && (
                 <div className="logistic-empty">
                   Ваша корзина пуста. Добавьте грузовики из каталога.
@@ -363,7 +435,7 @@ const LogisticDraftPage = () => {
               )}
 
               {computedItems.length > 0 && (
-                <div className="logistic-items">
+                <div className="logistic-scenarios-list">
                   {computedItems.map(({ item, calc, truckCount, totalCost, pricePerKm }) => {
                     const inputState = inputValues[item.truckId] ?? calc;
                     const weightInputValue = inputState.weight ?? 0;
@@ -371,65 +443,105 @@ const LogisticDraftPage = () => {
                     const image = item.truck.imgURL && item.truck.imgURL.length > 0 ? item.truck.imgURL : defaultImage;
 
                     return (
-                      <div key={item.truckId} className="logistic-row">
-                        <div className="logistic-row-image">
+                      <div key={item.truckId} className="logistic-scenario-card">
+                        <div className="scenario-card-image">
                           <img src={image} alt={item.truck.title} />
                         </div>
-                        <div className="logistic-row-info">
-                          <div className="logistic-row-title">{item.truck.title}</div>
-                          <div className="logistic-row-meta">
-                            {`Габариты: ${item.truck.length ?? "—"}×${item.truck.width ?? "—"}×${item.truck.height ?? "—"}м • Г/П: ${item.truck.weight ?? "—"}кг • Цена: ${pricePerKm.toLocaleString("ru-RU")} ₽/км`}
+                        <div className="scenario-card-content">
+                          <h3 className="scenario-card-title">{item.truck.title}</h3>
+                          <div className="scenario-card-params">
+                            <div className="scenario-param">
+                              <Form.Label>Вес груза (кг)</Form.Label>
+                              <Form.Control
+                                type="number"
+                                value={weightInputValue}
+                                min={0}
+                                onChange={(event) => handleChange(item.truckId, "weight", parseFloat(event.target.value))}
+                                disabled={!isDraft}
+                              />
+                            </div>
+                            <div className="scenario-param">
+                              <Form.Label>Расстояние (км)</Form.Label>
+                              <Form.Control
+                                type="number"
+                                value={distanceInputValue}
+                                min={0}
+                                onChange={(event) => handleChange(item.truckId, "distance", parseFloat(event.target.value))}
+                                disabled={!isDraft}
+                              />
+                            </div>
+                            <div className="scenario-param">
+                              <Form.Label>Длина (м)</Form.Label>
+                              <Form.Control
+                                type="text"
+                                value={item.truck.length ? item.truck.length.toLocaleString("ru-RU") : "—"}
+                                disabled
+                                readOnly
+                              />
+                            </div>
+                            <div className="scenario-param">
+                              <Form.Label>Ширина (м)</Form.Label>
+                              <Form.Control
+                                type="text"
+                                value={item.truck.width ? item.truck.width.toLocaleString("ru-RU") : "—"}
+                                disabled
+                                readOnly
+                              />
+                            </div>
+                            <div className="scenario-param">
+                              <Form.Label>Высота (м)</Form.Label>
+                              <Form.Control
+                                type="text"
+                                value={item.truck.height ? item.truck.height.toLocaleString("ru-RU") : "—"}
+                                disabled
+                                readOnly
+                              />
+                            </div>
+                            <div className="scenario-param">
+                              <Form.Label>Гр/П (кг)</Form.Label>
+                              <Form.Control
+                                type="text"
+                                value={item.truck.weight ? item.truck.weight.toLocaleString("ru-RU") : "—"}
+                                disabled
+                                readOnly
+                              />
+                            </div>
+                            <div className="scenario-param">
+                              <Form.Label>Цена за км (₽)</Form.Label>
+                              <Form.Control
+                                type="text"
+                                value={pricePerKm.toLocaleString("ru-RU")}
+                                disabled
+                                readOnly
+                              />
+                            </div>
+                          </div>
+                          <div className="scenario-card-actions">
+                            {isDraft && (
+                              <>
+                                <Button
+                                  variant="primary"
+                                  size="sm"
+                                  onClick={() => handleCalculate(item.truckId)}
+                                >
+                                  Сохранить
+                                </Button>
+                                <Button
+                                  variant="outline-danger"
+                                  size="sm"
+                                  onClick={() => handleRemoveTruck(item)}
+                                >
+                                  Удалить
+                                </Button>
+                              </>
+                            )}
                           </div>
                         </div>
-                        <div className="logistic-row-inputs">
-                          <div className="logistic-input-group">
-                            <Form.Label>Вес</Form.Label>
-                            <Form.Control
-                              type="number"
-                              value={weightInputValue}
-                              min={0}
-                              onChange={(event) => handleChange(item.truckId, "weight", parseFloat(event.target.value))}
-                              disabled={!isDraft}
-                            />
-                          </div>
-                          <div className="logistic-input-group">
-                            <Form.Label>Км</Form.Label>
-                            <Form.Control
-                              type="number"
-                              value={distanceInputValue}
-                              min={0}
-                              onChange={(event) => handleChange(item.truckId, "distance", parseFloat(event.target.value))}
-                              disabled={!isDraft}
-                            />
-                          </div>
-                          {isDraft && (
-                            <Button
-                              variant="primary"
-                              size="sm"
-                              onClick={() => handleCalculate(item.truckId)}
-                              className="logistic-calculate-btn"
-                            >
-                              Рассчитать
-                            </Button>
-                          )}
-                        </div>
-                        <div className="logistic-row-summary">
-                          <div className="logistic-row-summary-line">Машин: {truckCount}</div>
-                          <div className="logistic-row-summary-line">
+                        <div className="scenario-card-summary">
+                          <div className="scenario-summary-line">Машин: {truckCount}</div>
+                          <div className="scenario-summary-line">
                             Итого: {totalCost.toLocaleString("ru-RU", { maximumFractionDigits: 2 })} ₽
                           </div>
-                          {isDraft && (
-                            <Button
-                              variant="outline-danger"
-                              size="sm"
-                              onClick={() => handleRemoveTruck(item)}
-                            >
-                              Удалить
-                            </Button>
-                          )}
-                          {!isDraft && (
-                            <div className="logistic-view-only">Только просмотр</div>
-                          )}
                         </div>
                       </div>
                     );
@@ -437,34 +549,7 @@ const LogisticDraftPage = () => {
                 </div>
               )}
             </div>
-
-            <aside className="logistic-summary-card">
-              <div className="logistic-summary-title">Итоги заявки</div>
-              <div className="logistic-summary-item">
-                <span>Статус</span>
-                <strong>{logistic.status ?? "draft"}</strong>
-              </div>
-              <div className="logistic-summary-item">
-                <span>Количество машин</span>
-                <strong>{totalSummary.trucks}</strong>
-              </div>
-              <div className="logistic-summary-item">
-                <span>Итоговая стоимость</span>
-                <strong>{totalSummary.amount.toLocaleString("ru-RU", { maximumFractionDigits: 2 })} ₽</strong>
-              </div>
-
-              {isDraft && (
-                <>
-                  <Button variant="success" onClick={handleSave} className="logistic-summary-save" disabled={!logistic || logistic.items.length === 0}>
-                    Сохранить заявку
-                  </Button>
-                  <Button variant="outline-danger" onClick={handleReset} className="logistic-summary-delete">
-                    Удалить заявку
-                  </Button>
-                </>
-              )}
-            </aside>
-          </div>
+          </>
         )}
       </div>
     </div>
